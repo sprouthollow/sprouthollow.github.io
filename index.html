@@ -12,12 +12,13 @@
 <title>Sprout Hollow</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@500;700&display=swap" rel="stylesheet">
 <style>
-/* VOICE: cozy but brave — a pocket farm with a forest full of secrets
+/* original mascots (Pip, Fuzzle, Lumi); painterly countryside scene
+   VOICE: cozy but brave — a pocket farm with a forest full of secrets
    IDEA: a wooden toy farm board beside a hand-drawn treasure map
    PICTURE: the field (farm tab) or the fog-covered Whisperwood map (adventure tab)
    COLOUR and TYPE: meadow green, honey wood, strawberry accent, night-moss for the woods; Fredoka + Nunito
    LAYOUT: title bar with stats and weather, tabs, the board big, side panels below on phones */
-:root{color-scheme:light dark;--bg:light-dark(#bfe6a4,#1b2a2a);--sky:light-dark(#fff6d9,#22343a);--ink:light-dark(#3b2a1e,#f5ead8);--wood:light-dark(#d9a066,#8a5a35);--woodD:light-dark(#a86c3d,#5e3b22);--soil:#8b5a3c;--soilW:#5e3a26;--berry:#ff5f7e;--card:light-dark(#fffaf0,#2b3d3f);--moss:#2f5d46;--fog:#cfe3d6}
+:root{color-scheme:light dark;--bg:light-dark(#cfe7c4,#1c2b33);--sky:light-dark(#fdf6e3,#263b48);--ink:light-dark(#3b2a1e,#f5ead8);--wood:light-dark(#d9a066,#8a5a35);--woodD:light-dark(#a86c3d,#5e3b22);--soil:#8b5a3c;--soilW:#5e3a26;--berry:#ff5f7e;--card:light-dark(#fffaf0,#2b3d3f);--moss:#2f5d46;--fog:#cfe3d6}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 body{margin:0;background:radial-gradient(circle at 20% 0,var(--sky),var(--bg) 60%);color:var(--ink);font:16px/1.5 Nunito,system-ui,sans-serif;overflow-x:clip;min-height:100vh}
@@ -27,6 +28,12 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 h1{font:700 clamp(30px,5vw,44px)/1.05 Fredoka,sans-serif;margin:0}
 .stats{display:flex;gap:6px;flex-wrap:wrap}
 .pill{background:var(--card);border:3px solid var(--woodD);border-radius:99px;padding:3px 12px;font:600 15px Fredoka;white-space:nowrap}
+.scene{position:relative;height:clamp(120px,22vw,190px);border-radius:28px;overflow:hidden;margin-bottom:12px;box-shadow:0 8px 24px #0002}
+.scene svg{position:absolute;inset:0;width:100%;height:100%}
+.cloud{animation:drift 60s linear infinite}.cloud.b{animation-duration:90s}
+@keyframes drift{from{transform:translateX(-30%)}to{transform:translateX(130%)}}
+.bob{animation:bob 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes bob{50%{transform:translateY(-6%) scaleY(1.03)}}
 .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .main{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px}
 @media(max-width:760px){.main{grid-template-columns:minmax(0,1fr)}}
@@ -92,6 +99,20 @@ body.rain .drop{display:block}
     <span class="pill" id="lvl"></span><span class="pill" id="day"></span><span class="pill" id="wx"></span>
   </div>
 </header>
+<div class="scene" aria-hidden="true"><svg viewBox="0 0 800 190" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fc3e8"/><stop offset=".7" stop-color="#d8ecf2"/><stop offset="1" stop-color="#fdf1d6"/></linearGradient>
+<filter id="wc"><feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="3"/><feDisplacementMap in="SourceGraphic" scale="6"/></filter>
+<radialGradient id="cl" cx=".5" cy=".4"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#eef4f8"/></radialGradient></defs>
+<rect width="800" height="190" fill="url(#sk)"/>
+<g class="cloud" filter="url(#wc)"><g fill="url(#cl)"><circle cx="120" cy="60" r="34"/><circle cx="160" cy="44" r="42"/><circle cx="205" cy="62" r="30"/><rect x="90" y="60" width="140" height="30" rx="15"/></g></g>
+<g class="cloud b" filter="url(#wc)" opacity=".85"><g fill="url(#cl)"><circle cx="460" cy="40" r="26"/><circle cx="495" cy="30" r="32"/><circle cx="530" cy="44" r="22"/><rect x="440" y="40" width="110" height="22" rx="11"/></g></g>
+<path d="M0 130 Q150 80 320 118 T640 104 T800 112 V190 H0z" fill="#a9cf8e" filter="url(#wc)"/>
+<path d="M0 150 Q200 112 400 142 T800 132 V190 H0z" fill="#86b96c"/>
+<g transform="translate(600 92)"><rect x="0" y="22" width="56" height="34" fill="#f5e6c8"/><path d="M-6 24 L28 -4 L62 24z" fill="#c4614a"/><rect x="22" y="36" width="12" height="20" fill="#7a5032"/><rect x="40" y="30" width="10" height="9" fill="#9fd2e8"/><rect x="40" y="2" width="8" height="14" fill="#8a6a5a"/></g>
+<g fill="#5e9a54"><circle cx="70" cy="132" r="22"/><circle cx="92" cy="124" r="18"/><rect x="78" y="140" width="6" height="16" fill="#6b4a2a"/></g>
+<path d="M0 172 Q400 150 800 170 V190 H0z" fill="#6fa85a"/>
+<g fill="#fff" opacity=".9"><circle cx="230" cy="166" r="3"/><circle cx="260" cy="172" r="2.5"/><circle cx="520" cy="164" r="3"/><circle cx="700" cy="170" r="2.5"/></g>
+</svg></div>
 <div class="tabs">
   <button class="btn" data-tab="farm">Farm</button>
   <button class="btn" data-tab="woods">Whisperwood</button>
@@ -198,7 +219,7 @@ function render(){
   if(S.tab==='quests'){
     side=`<div class="panel"><h2>Quests</h2>${QUESTS.map(q=>{const v=Math.min(q.n,q.goal(S)),ok=v>=q.n,c=S.claimed[q.id];return `<div><div class="row"><span>${q.t}</span><button class="btn" data-q="${q.id}" ${ok&&!c?'':'disabled'}>${c?'Done':(q.r.coins?q.r.coins+' coins':q.r.gems+' gems')}</button></div><div class="meter"><i style="width:${v/q.n*100}%"></i></div></div>`}).join('')}</div>
     <div class="panel"><h2>Gem shop</h2><div class="row"><span>Moonmelon seed</span><button class="btn" data-buy="moonmelon" ${S.gems>=3?'':'disabled'}>3 gems</button></div><div class="row"><span>Starfruit seed</span><button class="btn" data-buy="starfruit" ${S.gems>=5?'':'disabled'}>5 gems</button></div><div class="row"><span>Sprinkler (auto-water today)</span><button class="btn" data-buy="sprinkler" ${S.gems>=2?'':'disabled'}>2 gems</button></div></div>
-    <div class="panel"><h2>Forest friends</h2><p>${S.friends?`You've befriended ${S.friends} bunny${S.friends>1?'s':''}. Each one adds +5% to sale prices.`:'Find bunnies in Whisperwood to befriend them.'}</p></div>`;
+    <div class="panel"><h2>Forest friends</h2><p>${S.friends?`You've befriended ${S.friends} Fuzzle${S.friends>1?'s':''}. Each one adds +5% to sale prices.`:'Find Fuzzles in Whisperwood to befriend them.'}</p></div>`;
   }
   if(S.tab==='share'){
     side=`<div class="panel"><h2>Scan to play</h2><p>Point any phone camera here. It opens the game, then use "Add to Home Screen" (iPhone) or "Install app" (Android, Windows, Mac).</p><div id="qr"></div><label for="url">Game link</label><input id="url" value="${APP_URL}"><div class="tools"><button class="btn" data-a="copy">Copy link</button><button class="btn" data-a="regen">Update QR</button></div><p class="note">Free forever. No ads, no sign-up. Saves on each device.</p></div>`;
@@ -224,7 +245,7 @@ function explore(i){const t=S.map[i];
   else if(e==='gem'){S.gems++;toast('A sparkly gem!');t.e='done'}
   else if(e==='seed'){const k=Math.random()<.7?'moonmelon':'starfruit';S.rare[k]=(S.rare[k]||0)+1;toast('Rare seed: '+CROPS[k].name+'!');t.e='done'}
   else if(e==='chest'){const n=60+(Math.random()*80|0);S.coins+=n;S.gems+=2;modal(`${ICON.chest}<h2>Treasure chest!</h2><p>${n} coins and 2 gems inside.</p><button class="btn big" data-a="close">Yay!</button>`);t.e='done'}
-  else if(e==='friend'){S.friends++;modal(`${ICON.friend}<h2>A bunny joins you!</h2><p>Your forest friends make villagers pay 5% more each.</p><button class="btn big" data-a="close">Welcome, buddy</button>`);t.e='done'}
+  else if(e==='friend'){S.friends++;modal(`${ICON.friend}<h2>Fuzzle joins you!</h2><p>Your forest friends make villagers pay 5% more each.</p><button class="btn big" data-a="close">Welcome, buddy</button>`);t.e='done'}
   else if(e==='mole')moleFight(t);
   else toast('Just soft grass and birdsong.');
 }
@@ -262,9 +283,15 @@ document.addEventListener('click',e=>{
 });
 $('modal').addEventListener('click',e=>{if(e.target.id==='modal'&&!mole)close()});
 
-const CRIT=[`<svg viewBox="0 0 60 50"><ellipse cx="30" cy="32" rx="18" ry="13" fill="#fff"/><circle cx="44" cy="20" r="9" fill="#fff"/><path d="M41 11 q3-6 6 0" fill="#ff5f7e"/><path d="M52 20 l6 2 -6 2z" fill="#ffb400"/><circle cx="46" cy="18" r="1.8" fill="#3b2a1e"/></svg>`,
- `<svg viewBox="0 0 60 50"><ellipse cx="28" cy="34" rx="17" ry="11" fill="#f2a65a"/><circle cx="44" cy="24" r="11" fill="#f2a65a"/><path d="M36 16 l2-9 6 6z M46 13 l6-6 2 9z" fill="#f2a65a"/><circle cx="41" cy="23" r="1.8" fill="#3b2a1e"/><circle cx="48" cy="23" r="1.8" fill="#3b2a1e"/><path d="M12 32 q-10-6 -4-16" stroke="#f2a65a" stroke-width="5" fill="none" stroke-linecap="round"/></svg>`];
-$('critters').innerHTML=CRIT.map((c,i)=>`<div class="critter" id="cr${i}" style="left:${10+i*60}%;top:70%">${c}</div>`).join('');
+const CRIT=[
+ /* Pip: acorn-capped seedling kid */
+ `<svg viewBox="0 0 60 60"><ellipse cx="30" cy="56" rx="14" ry="3" fill="#0003"/><g class="bob"><ellipse cx="30" cy="38" rx="17" ry="16" fill="#fff8ee"/><path d="M12 30 q18 -22 36 0 q-18 6 -36 0z" fill="#b07a45"/><path d="M14 29 q16 4 32 0" stroke="#8a5a30" stroke-width="2" fill="none"/><path d="M30 10 q4 -6 9 -4 q-3 5 -9 4z" fill="#7fc35e"/><circle cx="24" cy="40" r="2.2" fill="#3b2a1e"/><circle cx="36" cy="40" r="2.2" fill="#3b2a1e"/><path d="M28 45 q2 2 4 0" stroke="#3b2a1e" stroke-width="1.6" fill="none" stroke-linecap="round"/><ellipse cx="19" cy="45" rx="3.4" ry="2" fill="#ffb1bf"/><ellipse cx="41" cy="45" rx="3.4" ry="2" fill="#ffb1bf"/></g></svg>`,
+ /* Fuzzle: dandelion-puff spirit with leaf feet */
+ `<svg viewBox="0 0 60 60"><ellipse cx="30" cy="56" rx="13" ry="3" fill="#0003"/><g class="bob">${Array.from({length:14},(_,i)=>`<circle cx="${30+18*Math.cos(i/14*6.283)}" cy="${32+16*Math.sin(i/14*6.283)}" r="7" fill="#fffbe6"/>`).join('')}<circle cx="30" cy="32" r="16" fill="#fffbe6"/><path d="M20 50 q-6 2 -6 6 q6 0 8 -4z M40 50 q6 2 6 6 q-6 0 -8 -4z" fill="#8fd16a"/><circle cx="25" cy="32" r="2" fill="#3b2a1e"/><circle cx="35" cy="32" r="2" fill="#3b2a1e"/><path d="M28 37 q2 2 4 0" stroke="#3b2a1e" stroke-width="1.5" fill="none"/><ellipse cx="21" cy="37" rx="3" ry="1.8" fill="#ffc6a8"/><ellipse cx="39" cy="37" rx="3" ry="1.8" fill="#ffc6a8"/></g></svg>`,
+ /* Lumi: cloud lamb with a sprout tail */
+ `<svg viewBox="0 0 60 60"><ellipse cx="30" cy="56" rx="15" ry="3" fill="#0003"/><g class="bob"><g fill="#f3f6fb"><circle cx="20" cy="36" r="10"/><circle cx="30" cy="30" r="12"/><circle cx="40" cy="36" r="10"/><rect x="14" y="34" width="32" height="14" rx="7"/></g><rect x="20" y="46" width="4" height="7" rx="2" fill="#9bb0c4"/><rect x="36" y="46" width="4" height="7" rx="2" fill="#9bb0c4"/><path d="M50 36 q6 -4 4 -10 q-5 3 -4 10z" fill="#8fd16a"/><circle cx="26" cy="36" r="2" fill="#3b2a1e"/><circle cx="34" cy="36" r="2" fill="#3b2a1e"/><ellipse cx="22" cy="40" rx="2.8" ry="1.6" fill="#ffb1bf"/><ellipse cx="38" cy="40" rx="2.8" ry="1.6" fill="#ffb1bf"/></g></svg>`
+];
+$('critters').innerHTML=CRIT.map((c,i)=>`<div class="critter" id="cr${i}" style="left:${10+i*35}%;top:70%">${c}</div>`).join('');
 setInterval(()=>CRIT.forEach((_,i)=>{const e=$('cr'+i);e.style.left=(Math.random()*80)+'%';e.style.top=(Math.random()*80)+'%'}),4000);
 
 let ticks=0;
