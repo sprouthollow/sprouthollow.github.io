@@ -210,7 +210,7 @@ const CRIT=[
  `<svg viewBox="0 0 60 60"><ellipse cx="30" cy="56" rx="15" ry="3" fill="#0003"/><g class="bob"><g fill="#f3f6fb"><circle cx="20" cy="36" r="10"/><circle cx="30" cy="30" r="12"/><circle cx="40" cy="36" r="10"/><rect x="14" y="34" width="32" height="14" rx="7"/></g><rect x="20" y="46" width="4" height="7" rx="2" fill="#9bb0c4"/><rect x="36" y="46" width="4" height="7" rx="2" fill="#9bb0c4"/><path d="M50 36 q6 -4 4 -10 q-5 3 -4 10z" fill="#8fd16a"/><circle cx="26" cy="36" r="2" fill="#3b2a1e"/><circle cx="34" cy="36" r="2" fill="#3b2a1e"/><ellipse cx="22" cy="40" rx="2.8" ry="1.6" fill="#ffb1bf"/><ellipse cx="38" cy="40" rx="2.8" ry="1.6" fill="#ffb1bf"/></g></svg>`
 ];
 $('critters').innerHTML=CRIT.map((c,i)=>`<div class="critter" id="cr${i}" style="left:${10+i*35}%;top:70%">${c}</div>`).join('');
-setInterval(()=>CRIT.forEach((_,i)=>{const e=$('cr'+i);e.style.left=(Math.random()*80)+'%';e.style.top=(Math.random()*80)+'%'}),4000);
+setInterval(()=>CRIT.forEach((_,i)=>{const e=$('cr'+i);if(!e)return;e.style.left=(Math.random()*80)+'%';e.style.top=(Math.random()*80)+'%'}),4000);
 
 let ticks=0;
 setInterval(()=>{

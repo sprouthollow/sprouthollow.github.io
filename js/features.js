@@ -32,13 +32,15 @@ const NPCS={
   lines:[["Mrrp.","*sniffs your boots suspiciously*"],["Mrrrp? *headbutts your hand*","*rolls over in a sunbeam*"],["*purrs loudly and follows you everywhere*","Mrrp mrrp! (You are clearly family now.)"]]}
 };
 const COMPANIONS={
- pip:{name:'Pip',desc:'A seedling kid with an acorn cap.',perk:'Crops grow 5% faster',found:'start'},
- fuzzle:{name:'Fuzzle',desc:'A dandelion puff that sneezes when happy.',perk:'Sales pay a little more',found:'woods'},
- lumi:{name:'Lumi',desc:'A cloud lamb with a sprout tail.',perk:'Watering lasts longer',found:'start'},
- moss:{name:'Moss Sprite',desc:'A tiny mossy spirit that hums to trees.',perk:'More twigs in the woods',found:'secret'},
- moth:{name:'Star Moth',desc:'Glows softly on summer nights.',perk:'Finds feathers',found:'summer'},
- frog:{name:'Puddle Frog',desc:'Loves rainy days and splashing.',perk:'Rain grows crops faster',found:'rain'}
+ fluffkin:{name:'Fluffkin',desc:'A tiny fluffy forest spirit that drifts on warm breezes.',rarity:'Common',personality:'Gentle and sleepy',food:'turnip',perk:'Sales pay a little more',found:'woods'},
+ mossbun:{name:'Mossbun',desc:'A round moss-covered bunny with a flower on its head.',rarity:'Common',personality:'Shy, then very cuddly',food:'berry',perk:'Finds extra twigs in the woods',found:'woods'},
+ pippin:{name:'Pippin',desc:'A little woodland fox who loves to dig.',rarity:'Uncommon',personality:'Cheeky and curious',food:'corn',perk:'Crops grow 5% faster',found:'woods'},
+ mushling:{name:'Mushling',desc:'A tiny mushroom creature who hums in the rain.',rarity:'Uncommon',personality:'Cheerful and a bit clumsy',food:'pumpkin',perk:'Finds more glow mushrooms',found:'woods'},
+ lumi:{name:'Lumi',desc:'A glowing firefly who lights the way home.',rarity:'Rare',personality:'Bright, brave and loyal',food:'sunflower',perk:'Finds star feathers',found:'secret'},
+ emberkin:{name:'Emberkin',desc:'A baby magical dragon, warm as a teacup.',rarity:'Legendary',personality:'Proud, playful and secretly soft',food:'starfruit',perk:'Crops grow 5% faster',found:'legend'}
 };
+const SKINS=['Classic','Blossom ribbon','Starlit sparkle'];
+const OLD_COMP={fuzzle:'fluffkin',moss:'mossbun',pip:'pippin',lumi:'lumi',moth:'mushling',frog:'mossbun'};
 const SECRETS=[
  {id:'glade',name:'Moonlit Glade',desc:'Silver grass that hums when the wind blows.',reward:{moon:2}},
  {id:'ring',name:'Fairy Ring',desc:'A circle of mushrooms. Stepping inside makes you giggle.',reward:{mush:4}},
@@ -108,7 +110,7 @@ const MARKET=[
 
 /* ---------------- State ---------------- */
 function defaults(){return{v:SAVE_VERSION,tut:0,daily:{last:'',visits:0},mats:{},items:{},decor:{},cottage:{wall:null,window:null,shelf:null,floor:null,rug:null},
- npc:{},talked:{},comp:{pip:{aff:0},lumi:{aff:0}},petted:{},secrets:{},ql:{},dq:{date:'',list:[]},ach:{},coll:{},
+ npc:{},talked:{},comp:{fluffkin:{aff:0,skin:0}},fed:{},petted:{},secrets:{},ql:{},dq:{date:'',list:[]},ach:{},coll:{},
  c:{harvest:0,explore:0,orders:0,grown:{},crafted:{},talk:0,pet:0},player:{hat:'#e98aa4',name:'Farmer'},lastSeason:-1,journalTab:'disc',slot:null,dlg:null}}
 function migrate(){const s=S();
   if(!s.x||typeof s.x!=='object')s.x={};
@@ -118,6 +120,9 @@ function migrate(){const s=S();
   for(const k in d.cottage)if(!(k in s.x.cottage))s.x.cottage[k]=null;
   // carry over progress from v2 saves
   if(old<3){s.x.c.harvest=Math.max(s.x.c.harvest,(s.st&&s.st.harvest)||0);s.x.c.explore=Math.max(s.x.c.explore,(s.st&&s.st.explored)||0);s.x.c.orders=Math.max(s.x.c.orders,(s.st&&s.st.orders)||0);if(s.friends>0)s.x.comp.fuzzle=s.x.comp.fuzzle||{aff:0};if(s.xp>0)s.x.tut=99}
+  if(!s.x.fed)s.x.fed={};
+  for(const k of Object.keys(s.x.comp)){if(!COMPANIONS[k]){const n=OLD_COMP[k]||'fluffkin';const o=s.x.comp[k];delete s.x.comp[k];if(!s.x.comp[n])s.x.comp[n]={aff:o.aff||0,skin:0};else s.x.comp[n].aff=Math.max(s.x.comp[n].aff,o.aff||0)}else if(s.x.comp[k].skin===undefined)s.x.comp[k].skin=0}
+  if(!Object.keys(s.x.comp).length)s.x.comp.fluffkin={aff:0,skin:0};
   s.x.v=SAVE_VERSION;s.x.dlg=null}
 const add=(bag,k,n)=>{bag[k]=(bag[k]||0)+n};
 function give(r,why){const s=S(),out=[];if(!r)return'';
@@ -139,12 +144,7 @@ function npcSVG(k){const n=NPCS[k],c=n.col;
   bun:`<ellipse cx="20" cy="8" rx="5" ry="12" fill="${c}"/><ellipse cx="40" cy="8" rx="5" ry="12" fill="${c}"/><rect x="22" y="10" width="16" height="6" rx="2" fill="#5b4a7a"/>`,
   mochi:`<path d="M14 22 l4 -14 l9 8z M46 22 l-4 -14 l-9 8z" fill="${c}"/>`}[k];
  return `<svg viewBox="0 0 60 60"><circle cx="30" cy="34" r="22" fill="${c}"/>${ears}<circle cx="30" cy="36" r="17" fill="#fff6ec"/>${face(30,36,.9)}${k==='mochi'?'<path d="M20 41 h-8 M20 44 h-7 M40 41 h8 M40 44 h7" stroke="#4a3628" stroke-width="1"/>':''}</svg>`}
-function compSVG(k){const base={
- moss:`<ellipse cx="30" cy="38" rx="16" ry="14" fill="#9cc98a"/><path d="M18 30 q12 -18 24 0" fill="#6fa85a"/><circle cx="22" cy="26" r="3" fill="#c7e6a0"/><circle cx="36" cy="24" r="2.5" fill="#c7e6a0"/>${face(30,40,.75)}`,
- moth:`<ellipse cx="16" cy="34" rx="12" ry="14" fill="#d8cdf2"/><ellipse cx="44" cy="34" rx="12" ry="14" fill="#d8cdf2"/><circle cx="16" cy="34" r="4" fill="#fff3b0"/><circle cx="44" cy="34" r="4" fill="#fff3b0"/><ellipse cx="30" cy="38" rx="9" ry="13" fill="#fff8ee"/><path d="M26 25 q-4 -8 -8 -8 M34 25 q4 -8 8 -8" stroke="#8a7aa8" stroke-width="2" fill="none"/>${face(30,38,.6)}`,
- frog:`<ellipse cx="30" cy="40" rx="18" ry="13" fill="#a8d8b0"/><circle cx="20" cy="27" r="7" fill="#a8d8b0"/><circle cx="40" cy="27" r="7" fill="#a8d8b0"/><circle cx="20" cy="27" r="3" fill="#4a3628"/><circle cx="40" cy="27" r="3" fill="#4a3628"/><path d="M24 44 q6 5 12 0" stroke="#4a3628" stroke-width="2" fill="none"/><ellipse cx="17" cy="42" rx="3.4" ry="2" fill="#ffadbd"/><ellipse cx="43" cy="42" rx="3.4" ry="2" fill="#ffadbd"/>`}[k];
- if(base)return `<svg viewBox="0 0 60 60"><ellipse cx="30" cy="55" rx="14" ry="3" fill="#0003"/><g class="bob">${base}</g></svg>`;
- const i={pip:0,fuzzle:1,lumi:2}[k];const el=document.getElementById('cr'+i);return el?el.innerHTML:''}
+function compSVG(k){const sk=(S()&&S().x&&S().x.comp[k]&&S().x.comp[k].skin)||0;try{return `<img class="pix" alt="${COMPANIONS[k]?COMPANIONS[k].name:''}" src="${window.SHPix.spriteURL(k,sk)}">`}catch(e){return''}}
 const hearts=(n,max=10)=>`<span class="hearts" aria-label="${n} of ${max} hearts">${Array.from({length:max},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</span>`;
 function decorSVG(k){const m={
  lantern:'<rect x="22" y="14" width="16" height="24" rx="5" fill="#ffd98a"/><rect x="24" y="8" width="12" height="6" fill="#8a6a5a"/><circle cx="30" cy="26" r="5" fill="#fff6b0"/>',
@@ -173,18 +173,18 @@ function mapGen(m){
   if(open.length){const i=open.splice(Math.random()*open.length|0,1)[0];m[i].e='secret'}
   if(open.length&&Math.random()<.6){const i=open.splice(Math.random()*open.length|0,1)[0];m[i].e='comp'}
   return m}
-function pickMat(){const s=season().id;const pool=['wood','wood','petal','mush','petal','wood','mush'];if(s==='winter')pool.push('frost','frost');if(x().comp.moss)pool.push('wood');if(x().comp.moth)pool.push('feather');if(Math.random()<.08)return'moon';return rnd(pool)}
+function pickMat(){const s=season().id;const pool=['wood','wood','petal','mush','petal','wood','mush'];if(s==='winter')pool.push('frost','frost');if(x().comp.mossbun)pool.push('wood');if(x().comp.lumi)pool.push('feather');if(x().comp.mushling)pool.push('mush');if(Math.random()<.08)return'moon';return rnd(pool)}
 function explore(e,t){const s=S();
   if(e==='mat'){const k=pickMat(),n=1+(Math.random()*2|0);add(s.x.mats,k,n);t.e='done';SH.sfx('friend');SH.toast(`Found ${n} ${MATS[k]}!`);countExplore();return true}
   if(e==='secret'){const left=SECRETS.filter(q=>!s.x.secrets[q.id]);const q=left.length?rnd(left):rnd(SECRETS);const first=!s.x.secrets[q.id];s.x.secrets[q.id]=s.x.secrets[q.id]||{day:s.day};t.e='done';
     const r=first?q.reward:{coins:40};const got=give(r);SH.sfx('fanfare');
-    let extra='';if(q.id==='glade'&&!s.x.comp.moss){s.x.comp.moss={aff:0};extra=`<p><b>Moss Sprite</b> peeks out and decides to follow you home!</p>`}
+    let extra='';if(q.id==='glade'&&!s.x.comp.lumi){s.x.comp.lumi={aff:0,skin:0};extra=`<p><b>Lumi</b>, a glowing firefly, decides to light your way home!</p>`}if(q.id==='hollow'&&!s.x.comp.emberkin&&Object.keys(s.x.secrets).length>=3){s.x.comp.emberkin={aff:0,skin:0};extra=`<p>A sleepy <b>Emberkin</b> hatches from a warm lantern and nuzzles you. Legendary!</p>`}
     SH.modal(`<div class="secret-art">${secretSVG(q.id)}</div><h2>${first?'Secret discovered!':'You return to a secret place'}</h2><h3>${q.name}</h3><p>${q.desc}</p>${extra}<p class="note">${first?'Added to your journal. ':''}You found ${got}.</p><button class="btn big" data-a="close">How magical</button>`);countExplore();return true}
-  if(e==='comp'){const pool=Object.keys(COMPANIONS).filter(k=>!s.x.comp[k]&&(COMPANIONS[k].found==='woods'||(COMPANIONS[k].found==='summer'&&season().id==='summer')||(COMPANIONS[k].found==='rain'&&SH.S.wx===2)));
+  if(e==='comp'){const pool=Object.keys(COMPANIONS).filter(k=>!s.x.comp[k]&&COMPANIONS[k].found==='woods');
     t.e='done';countExplore();
     if(!pool.length){add(s.x.mats,'petal',2);SH.toast('A shy creature left you 2 wild petals');return true}
-    const k=rnd(pool);s.x.comp[k]={aff:0};SH.sfx('friend');SH.modal(`${compSVG(k)}<h2>${COMPANIONS[k].name} wants to join you!</h2><p>${COMPANIONS[k].desc}</p><p class="note">Visit them in your Cottage to pet and feed them.</p><button class="btn big" data-a="close">Welcome home</button>`);return true}
-  if(e==='friend'){countExplore();if(!s.x.comp.fuzzle){s.x.comp.fuzzle={aff:0}}return false}
+    const k=rnd(pool);s.x.comp[k]={aff:0,skin:0};SH.sfx('friend');SH.modal(`${compSVG(k)}<h2>${COMPANIONS[k].name} wants to join you!</h2><p>${COMPANIONS[k].desc}</p><p class="note">Visit them in your Cottage to pet and feed them.</p><button class="btn big" data-a="close">Welcome home</button>`);return true}
+  if(e==='friend'){countExplore();if(!s.x.comp.fluffkin){s.x.comp.fluffkin={aff:0,skin:0}}return false}
   if(e==='grass'){if(Math.random()<.35){const k=pickMat();add(s.x.mats,k,1);t.e='done';SH.toast('Rustling in the grass... 1 '+MATS[k]);countExplore();return true}}
   countExplore();return false}
 function countExplore(){x().c.explore++;bumpDaily('explore')}
@@ -193,7 +193,7 @@ function secretSVG(id){const pal={glade:['#2f4a6a','#cfe3ff'],ring:['#4f7a4a','#
 
 /* ---------------- Daily systems ---------------- */
 const DQ_POOL=[{k:'harvest',t:n=>`Harvest ${n} crops`,n:[4,6,8]},{k:'explore',t:n=>`Explore ${n} Whisperwood tiles`,n:[3,4,5]},{k:'talk',t:n=>`Chat with ${n} villagers`,n:[2,3]},{k:'pet',t:n=>`Pet ${n} companions`,n:[1,2]},{k:'craft',t:n=>`Craft ${n} item${n>1?'s':''}`,n:[1,2]},{k:'order',t:n=>`Fill ${n} village order${n>1?'s':''}`,n:[1,2]}];
-function ensureDaily(){const d=x().dq;if(d.date===today())return;const pool=[...DQ_POOL].sort(()=>Math.random()-.5).slice(0,3);d.date=today();d.list=pool.map(p=>{const n=rnd(p.n);return{k:p.k,n,v:0,t:p.t(n),claimed:false,r:{coins:30+n*10,[rnd(['wood','petal','mush'])]:2}}});x().talked={};x().petted={}}
+function ensureDaily(){const d=x().dq;if(d.date===today())return;const pool=[...DQ_POOL].sort(()=>Math.random()-.5).slice(0,3);d.date=today();x().fed={};d.list=pool.map(p=>{const n=rnd(p.n);return{k:p.k,n,v:0,t:p.t(n),claimed:false,r:{coins:30+n*10,[rnd(['wood','petal','mush'])]:2}}});x().talked={};x().petted={}}
 function bumpDaily(k){ensureDaily();x().dq.list.forEach(q=>{if(q.k===k&&q.v<q.n)q.v++})}
 const DAILY_GIFTS=[{coins:40},{wood:3,petal:2},{coins:60},{mush:3},{coins:80,petal:3},{moon:1,wood:2},{gems:3,coins:100}];
 function dailyCheck(){const d=x().daily;if(d.last===today()||x().tut<99)return;d.visits++;d.last=today();const r=DAILY_GIFTS[(d.visits-1)%7];const got=give(r);SH.save();
@@ -209,7 +209,7 @@ function seasonFX(){const box=document.querySelector('.scene');if(!box)return;le
 
 /* ---------------- Tutorial ---------------- */
 const TUT=[
- ['Welcome to Sprout Hollow!','I\'m Pip! This little hollow is yours to grow. Let me show you around. It only takes a moment.'],
+ ['Welcome to Sprout Hollow!','I\'m Fluffkin! This little hollow is yours to grow. Let me show you around. It only takes a moment.'],
  ['Plant seeds','Choose a seed from the Seed tray, then tap an empty plot. Turnips are quick and cheap to start with.'],
  ['Water and wait','Watering makes crops grow twice as fast. Rainy days water them for you!'],
  ['Harvest and sell','Tap a glowing crop to harvest it. Sell from your basket, or fill village orders for extra coins.'],
@@ -217,7 +217,7 @@ const TUT=[
  ['Your journal','The Journal keeps your discoveries, achievements and collections. Villagers in the Village have stories to share.'],
  ['That\'s everything!','There are no timers to stress about here. Play at your own pace. Happy farming!']];
 function tutorial(){const t=x().tut;if(t>=TUT.length){if(x().tut<99){x().tut=99;SH.save();dailyCheck()}return}
-  const [h,b]=TUT[t];SH.modal(`<div class="tut-art">${compSVG('pip')}</div><p class="step">${t+1} of ${TUT.length}</p><h2>${h}</h2><p>${b}</p><div class="tools center"><button class="btn" data-x="tut-skip">Skip tour</button><button class="btn big" data-x="tut-next">${t===TUT.length-1?'Start playing':'Next'}</button></div>`)}
+  const [h,b]=TUT[t];SH.modal(`<div class="tut-art">${compSVG('fluffkin')}</div><p class="step">${t+1} of ${TUT.length}</p><h2>${h}</h2><p>${b}</p><div class="tools center"><button class="btn" data-x="tut-skip">Skip tour</button><button class="btn big" data-x="tut-next">${t===TUT.length-1?'Start playing':'Next'}</button></div>`)}
 
 /* ---------------- Checks: achievements, questlines, collections ---------------- */
 function checkAll(){const s=S();
@@ -227,11 +227,12 @@ function checkAll(){const s=S();
     if(st.stage>=q.stages.length&&!st.ready){st.ready=true;SH.toast(q.name+' complete! Visit '+NPCS[q.npc].name)}})}
 
 /* ---------------- Views ---------------- */
-const TABS=['village','cottage','journal','market'];
+const TABS=['village','cottage','collection','journal','market'];
 function boardView(tab){const s=S();
   if(tab==='village')return `<div class="village">${Object.keys(NPCS).map(k=>{const n=NPCS[k],h=s.x.npc[k]||0;return `<button class="npc" data-x="talk" data-k="${k}" aria-label="Talk to ${n.name}"><span class="por">${npcSVG(k)}</span><b>${n.name}</b>${hearts(Math.min(h,10))}<small>${s.x.talked[k]?'Chatted today':'Tap to chat'}</small></button>`}).join('')}</div>${s.x.dlg?dialogView():''}`;
   if(tab==='cottage')return cottageView();
   if(tab==='journal')return journalView();
+  if(tab==='collection')return collectionView();
   if(tab==='market')return marketView();
   return''}
 function dialogView(){const d=x().dlg,n=NPCS[d.k],h=x().npc[d.k]||0;const ql=QUESTLINES.find(q=>q.npc===d.k);const st=ql&&x().ql[ql.id];
@@ -250,7 +251,7 @@ function journalView(){const s=S(),t=s.x.journalTab;
   const tabs=[['disc','Discoveries'],['ach','Achievements'],['coll','Collections'],['save','Save']].map(([k,l])=>`<button class="btn tape ${t===k?'on':''}" data-x="jtab" data-k="${k}">${l}</button>`).join('');
   let body='';
   if(t==='disc'){body=`<h3>Secret places</h3><div class="grid">${SECRETS.map(q=>s.x.secrets[q.id]?`<div class="card found">${secretSVG(q.id)}<b>${q.name}</b><small>${q.desc}</small></div>`:`<div class="card locked"><b>???</b><small>Somewhere in Whisperwood</small></div>`).join('')}</div>
-   <h3>Companions</h3><div class="grid">${Object.keys(COMPANIONS).map(k=>s.x.comp[k]?`<div class="card found">${compSVG(k)}<b>${COMPANIONS[k].name}</b><small>${COMPANIONS[k].perk}</small></div>`:`<div class="card locked"><b>???</b><small>${{woods:'Wanders Whisperwood',secret:'Lives near a moonlit place',summer:'Seen on summer days',rain:'Loves rainy days'}[COMPANIONS[k].found]}</small></div>`).join('')}</div>
+   <h3>Companions</h3><div class="grid">${Object.keys(COMPANIONS).map(k=>s.x.comp[k]?`<div class="card found">${compSVG(k)}<b>${COMPANIONS[k].name}</b><small>${COMPANIONS[k].perk}</small></div>`:`<div class="card locked"><b>???</b><small>${{woods:'Wanders Whisperwood',secret:'Glows near a moonlit place',legend:'Sleeps where old lanterns hang'}[COMPANIONS[k].found]}</small></div>`).join('')}</div>
    <h3>Crops grown</h3><div class="grid">${Object.keys(SH.CROPS).map(k=>{const n=s.x.c.grown[k]||0;return `<div class="card ${n?'found':'locked'}">${n?SH.cropSVG({k,gold:false},3):''}<b>${n?SH.CROPS[k].name:'???'}</b><small>${n?n+' grown':'Not grown yet'}</small></div>`}).join('')}</div>`}
   if(t==='ach')body=ACHIEVE.map(a=>{const v=Math.min(a.n,a.v(s));return `<div class="row ach ${s.x.ach[a.id]?'got':''}"><span><b>${a.name}</b><br><small>${a.t}</small></span><span>${s.x.ach[a.id]?'Earned':v+' / '+a.n}</span></div><div class="meter"><i style="width:${v/a.n*100}%"></i></div>`}).join('');
   if(t==='coll')body=COLLECTIONS.map(c=>{const it=c.items(),h=c.have(s),n=it.filter(h).length,done=n===it.length,cl=s.x.coll[c.id];return `<div class="panel inner"><div class="row"><span><b>${c.name}</b> · ${n}/${it.length}</span><button class="btn" data-x="coll" data-k="${c.id}" ${done&&!cl?'':'disabled'}>${cl?'Claimed':'Reward: '+rewardText(c.reward)}</button></div><p class="chips">${it.map(k=>`<span class="chip ${h(k)?'on':''}">${h(k)?c.label(k):'???'}</span>`).join('')}</p></div>`}).join('');
@@ -258,6 +259,13 @@ function journalView(){const s=S(),t=s.x.journalTab;
    <h3>Your farmer</h3><p>Hat colour</p><div class="tools">${['#e98aa4','#9fc6e8','#b8d8a0','#c8b4e8','#f2c48a'].map(c=>`<button class="swatch ${x().player.hat===c?'on':''}" style="background:${c}" data-x="hat" data-k="${c}" aria-label="Hat colour ${c}"></button>`).join('')}</div><div class="tools"><button class="btn" data-x="tut-replay">Replay the tour</button></div>`;
   return `<div class="journal"><div class="jtabs">${tabs}</div>${body}</div>`}
 const rewardText=r=>Object.entries(r).map(([k,v])=>k==='decor'?DECOR[v].name:k==='coins'?v+' coins':k==='gems'?v+' gems':v+' '+MATS[k]).join(' + ');
+function collectionView(){const s=S();const own=Object.keys(COMPANIONS);
+  return `<div class="coll"><div class="grid wide">${own.map(k=>{const c=COMPANIONS[k],o=s.x.comp[k];
+   if(!o)return `<div class="card locked creature"><b>???</b><span class="rar r-${c.rarity.toLowerCase()}">${c.rarity}</span><small>${{woods:'Wanders Whisperwood',secret:'Glows near a moonlit place',legend:'Sleeps where old lanterns hang'}[c.found]}</small></div>`;
+   const lvl=Math.floor(o.aff/2),fav=SH.CROPS[c.food];
+   return `<div class="card found creature"><span class="rar r-${c.rarity.toLowerCase()}">${c.rarity}</span>${compSVG(k)}<b>${c.name}</b>${hearts(Math.min(5,lvl),5)}<small>${c.desc}</small><small><b>Personality:</b> ${c.personality}<br><b>Favorite food:</b> ${fav?fav.name:'?'}<br><b>Gift:</b> ${c.perk}</small>
+   <div class="tools center"><button class="btn small" data-x="pet" data-k="${k}">${s.x.petted[k]?'Petted today':'Pet'}</button><button class="btn small" data-x="feed" data-k="${k}" ${s.x.fed[k]||!Object.values(s.basket).some(n=>n>0)?'disabled':''}>${s.x.fed[k]?'Fed today':'Feed'}</button></div>
+   <div class="tools center">${SKINS.map((nm,i)=>`<button class="chipbtn ${o.skin===i?'on':''}" data-x="skin" data-k="${k}" data-c="${i}" ${o.aff>=i*5?'':'disabled'} title="${o.aff>=i*5?nm:'Unlocks at '+(i*5)+' affection'}">${o.aff>=i*5?nm:'Locked'}</button>`).join('')}</div></div>`}).join('')}</div></div>`}
 function marketView(){const ent=window.SHEnt;
   return `<div class="market"><div class="banner"><h3>The Wandering Market</h3><p>Optional cosmetics that support Sprout Hollow. Everything that affects gameplay stays free, forever.</p></div><div class="grid wide">${MARKET.map(m=>`<div class="card offer ${ent&&ent.has(m.id)?'owned':''}"><span class="tag">${m.kind}</span><b>${m.name}</b><small>${m.desc}</small><button class="btn" disabled>${ent&&ent.has(m.id)?'Owned':'Coming soon · '+m.price}</button></div>`).join('')}</div><p class="note">Purchases aren't open yet. When they are, ownership will be checked by our server, never decided by the app on your device.</p></div>`}
 function sideView(tab,side){const s=S();ensureDaily();
@@ -275,6 +283,7 @@ function sideView(tab,side){const s=S();ensureDaily();
     const pantry=items.length?`<div class="panel"><h2>Pantry</h2>${items.map(([k,n])=>`<div class="row"><span>${RECIPES[k].name} × ${n}</span>${RECIPES[k].kind==='sell'?`<button class="btn small" data-x="sellitem" data-k="${k}">Sell ${RECIPES[k].sell}</button>`:`<button class="btn small" data-x="use" data-k="${k}">Use</button>`}</div>`).join('')}</div>`:'';
     return inv+craft+pantry+shop+bag}
   if(tab==='journal')return today+bag;
+  if(tab==='collection')return `<div class="panel"><h2>Companion care</h2><p class="note">Pet each friend once a day and feed them their favorite food for extra affection. Higher affection unlocks free cosmetic styles. Rare friends can never be bought; they are only found through adventure.</p></div>`+bag;
   if(tab==='market')return `<div class="panel"><h2>Our promise</h2><p>No pay-to-win, no energy you have to buy, no pressure timers. Cosmetics only.</p></div>`;
   return side}
 function questlinePanel(){const s=S();return `<div class="panel journal-card"><h2>Story quests</h2>${QUESTLINES.map(q=>{const st=s.x.ql[q.id];const n=NPCS[q.npc].name;
@@ -286,7 +295,11 @@ function after(tab){const s=S();
   if(TABS.includes(tab))$('tools').innerHTML='';
   if(tab==='woods'){const h=document.querySelector('.tile.here');if(h&&!h.querySelector('.farmer'))h.insertAdjacentHTML('beforeend',`<span class="on-tile">${farmerSVG(false)}</span>`)}
   const sc=document.querySelector('.scene');if(sc){let f=sc.querySelector('.walker');if(!f){f=document.createElement('div');f.className='walker';sc.appendChild(f)}const want=x().player.hat;if(f.dataset.h!==want){f.dataset.h=want;f.innerHTML=farmerSVG(true)}}
-  seasonFX();sheets(tab)}
+  seasonFX();sheets(tab);pixelWorld(tab)}
+function pixelWorld(tab){const P=window.SHPix,sc=document.querySelector('.scene');if(!P||!sc)return;P.mount(sc);
+  P.setScene({woods:'forest',farm:'farm',village:'farm',cottage:'home',collection:'glade',journal:'glade',market:'glade',quests:'forest',share:'farm'}[tab]||'farm');
+  document.body.dataset.tab=tab;
+  const cr=$('critters');if(cr&&cr.dataset.pix!==Object.keys(x().comp).join()){cr.dataset.pix=Object.keys(x().comp).join();cr.innerHTML=Object.keys(x().comp).slice(0,3).map((k,i)=>`<div class="critter" id="cr${i}" style="left:${10+i*35}%;top:70%">${compSVG(k)}</div>`).join('')}}
 
 /* ---------------- Events ---------------- */
 function emit(ev,arg){const s=S();try{
@@ -294,7 +307,7 @@ function emit(ev,arg){const s=S();try{
   if(ev==='order'){s.x.c.orders++;bumpDaily('order')}
   if(ev==='day'){seasonCheck()}
   checkAll()}catch(e){console.error(e)}}
-function growMul(p){let m=season().grow;if(season().bonus===p.k)m*=1.2;if(x().comp.pip)m*=1.05;if(x().comp.frog&&SH.S.wx===2)m*=1.1;return m}
+function growMul(p){let m=season().grow;if(season().bonus===p.k)m*=1.2;if(x().comp.pippin)m*=1.05;if(x().comp.emberkin)m*=1.05;return m}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(!b||!SH)return;const s=S(),k=b.dataset.k,a=b.dataset.x;
  try{
   if(a==='pausebtn'){setPause(!PAUSED);return}
@@ -316,6 +329,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(!b
   else if(a==='sellitem'){if(!(s.x.items[k]>0))return;s.x.items[k]--;s.coins+=RECIPES[k].sell;SH.sfx('coin')}
   else if(a==='use'){if(!(s.x.items[k]>0))return;s.x.items[k]--;if(k==='tonic'){s.plots.forEach(p=>{if(p)p.g+=SH.CROPS[p.k].time*.5});SH.toast('Your crops sparkle and stretch!')}SH.sfx('gold')}
   else if(a==='pet'){const c=s.x.comp[k];if(!s.x.petted[k]){s.x.petted[k]=1;c.aff=Math.min(10,c.aff+1);s.x.c.pet++;bumpDaily('pet');SH.toast(COMPANIONS[k].name+' wiggles happily!')}else SH.toast(COMPANIONS[k].name+' is already content today');SH.sfx('friend');b.classList.add('boing');setTimeout(()=>b.classList.remove('boing'),500);checkAll();SH.save();return}
+  else if(a==='feed'){const c=COMPANIONS[k],o=s.x.comp[k];if(!o||s.x.fed[k])return;let crop=(s.basket[c.food]||0)>0?c.food:Object.keys(s.basket).find(q=>s.basket[q]>0);if(!crop)return SH.toast('Harvest some crops to feed your friends');s.basket[crop]--;const fav=crop===c.food;o.aff=Math.min(10,o.aff+(fav?3:1));s.x.fed[k]=1;SH.sfx(fav?'gold':'harvest');SH.toast(fav?c.name+' LOVES it!':c.name+' munches happily')}
+  else if(a==='skin'){const o=s.x.comp[k],i=+b.dataset.c;if(o&&o.aff>=i*5)o.skin=i;SH.sfx('tap')}
   else if(a==='dq'){const q=s.x.dq.list[+k];if(!q||q.claimed||q.v<q.n)return;q.claimed=true;SH.toast('Reward: '+give(q.r));SH.sfx('coin')}
   else if(a==='coll'){const c=COLLECTIONS.find(c=>c.id===k);if(s.x.coll[k])return;const it=c.items(),h=c.have(s);if(!it.every(h))return;s.x.coll[k]=1;SH.sfx('fanfare');SH.modal(`<h2>Collection complete!</h2><p>${c.name}</p><p>You received ${give(c.reward)}.</p><button class="btn big" data-a="close">Hooray</button>`)}
   else if(a==='jtab')s.x.journalTab=k;
