@@ -298,7 +298,7 @@ function after(tab){const s=S();
   seasonFX();sheets(tab);pixelWorld(tab)}
 function pixelWorld(tab){const P=window.SHPix,sc=document.querySelector('.scene');if(!P||!sc)return;P.mount(sc);
   P.setScene({woods:'forest',farm:'farm',village:'farm',cottage:'home',collection:'glade',journal:'glade',market:'glade',quests:'forest',share:'farm'}[tab]||'farm');
-  document.body.dataset.tab=tab;
+  document.body.dataset.view=tab;
   const cr=$('critters');if(cr&&cr.dataset.pix!==Object.keys(x().comp).join()){cr.dataset.pix=Object.keys(x().comp).join();cr.innerHTML=Object.keys(x().comp).slice(0,3).map((k,i)=>`<div class="critter" id="cr${i}" style="left:${10+i*35}%;top:70%">${compSVG(k)}</div>`).join('')}}
 
 /* ---------------- Events ---------------- */
