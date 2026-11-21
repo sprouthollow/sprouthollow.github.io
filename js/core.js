@@ -82,7 +82,7 @@ document.addEventListener('pointerdown',()=>{auInit();if(AU.ctx&&AU.ctx.state===
 document.addEventListener('click',e=>{const b=e.target.closest('#mbtn,#sbtn');if(!b)return;auInit();
   if(b.id==='mbtn'){AU.on=!AU.on;AU.mus&&AU.mus.gain.setTargetAtTime(AU.on?.32:0,AU.ctx.currentTime,.3)}
   else{AU.sfxOn=!AU.sfxOn;AU.sfx&&(AU.sfx.gain.value=AU.sfxOn?.5:0)}auSave();auUI()});
-document.addEventListener('visibilitychange',()=>{if(!AU.ctx)return;document.hidden?AU.ctx.suspend():AU.ctx.resume()});
+document.addEventListener('visibilitychange',()=>{if(!AU.ctx)return;(document.hidden||(X()&&X().paused()))?AU.ctx.suspend():AU.ctx.resume()});
 
 
 const face=(x,y)=>`<circle cx="${x-6}" cy="${y}" r="2.6" fill="#3b2a1e"/><circle cx="${x+6}" cy="${y}" r="2.6" fill="#3b2a1e"/><path d="M${x-4} ${y+5} q4 4 8 0" stroke="#3b2a1e" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="${x-11}" cy="${y+4}" r="3" fill="#ff8fa6" opacity=".7"/><circle cx="${x+11}" cy="${y+4}" r="3" fill="#ff8fa6" opacity=".7"/>`;
@@ -214,13 +214,14 @@ setInterval(()=>CRIT.forEach((_,i)=>{const e=$('cr'+i);e.style.left=(Math.random
 
 let ticks=0;
 setInterval(()=>{
+  if(X()&&X().paused())return;
   const wet=WEATHER[S.wx][0]==='Rain'||S.sprink===S.day,breezy=WEATHER[S.wx][0]==='Breezy';
   S.plots.forEach(p=>{if(p&&prog(p)<1){if(wet)p.w=Math.max(p.w,1);p.g+=(p.w>0?2:1)*(breezy?1.25:1)*(X()?X().growMul(p):1);if(p.w>0&&!wet)p.w--}});
   if(++ticks%120===0)newDay();
   save();
   if(!$('modal').classList.contains('on')||!mole){if(S.tab==='share')renderStats();else render()}
 },1000);
-window.SH={get S(){return S},set S(v){S=v},save,render,toast,modal,close,sfx,CROPS,ICON,lvl,newDay,KEY,cropSVG,price};
+window.SH={get S(){return S},set S(v){S=v},save,render,toast,modal,close,sfx,CROPS,ICON,lvl,newDay,KEY,cropSVG,price,AU};
 X()&&X().init();
 render();auUI();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

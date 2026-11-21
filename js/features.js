@@ -286,7 +286,7 @@ function after(tab){const s=S();
   if(TABS.includes(tab))$('tools').innerHTML='';
   if(tab==='woods'){const h=document.querySelector('.tile.here');if(h&&!h.querySelector('.farmer'))h.insertAdjacentHTML('beforeend',`<span class="on-tile">${farmerSVG(false)}</span>`)}
   const sc=document.querySelector('.scene');if(sc){let f=sc.querySelector('.walker');if(!f){f=document.createElement('div');f.className='walker';sc.appendChild(f)}const want=x().player.hat;if(f.dataset.h!==want){f.dataset.h=want;f.innerHTML=farmerSVG(true)}}
-  seasonFX()}
+  seasonFX();sheets(tab)}
 
 /* ---------------- Events ---------------- */
 function emit(ev,arg){const s=S();try{
@@ -297,6 +297,9 @@ function emit(ev,arg){const s=S();try{
 function growMul(p){let m=season().grow;if(season().bonus===p.k)m*=1.2;if(x().comp.pip)m*=1.05;if(x().comp.frog&&SH.S.wx===2)m*=1.1;return m}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(!b||!SH)return;const s=S(),k=b.dataset.k,a=b.dataset.x;
  try{
+  if(a==='pausebtn'){setPause(!PAUSED);return}
+  if(a==='resume'){setPause(false);return}
+  if(a==='sheet'){SHEET[S().tab]=+k;SH.sfx('tap');sheets(S().tab);return}
   if(a==='tut-next'){s.x.tut++;SH.close();SH.save();setTimeout(tutorial,120);return}
   if(a==='tut-skip'){s.x.tut=TUT.length;SH.close();tutorial();return}
   if(a==='tut-replay'){s.x.tut=0;SH.save();tutorial();return}
@@ -328,9 +331,27 @@ function heartGifts(k){const h=S().x.npc[k];const key='hg_'+k;const got=S().x.ac
   if(next){S().x.ach[key]=next[0];setTimeout(()=>SH.modal(`<span class="por big">${npcSVG(k)}</span><h2>${NPCS[k].name} has a gift for you</h2><p>"You've become such a dear friend." You received ${give(next[1])}.</p><button class="btn big" data-a="close">Thank you!</button>`),200)}}
 function backup(force){try{const b=JSON.parse(localStorage.getItem('sprout-hollow-backup')||'null');if(force||!b||b.date!==today())localStorage.setItem('sprout-hollow-backup',JSON.stringify({date:today(),s:SH.S}))}catch(e){}}
 
+/* ---------------- Pause ---------------- */
+let PAUSED=false;
+function setPause(on){PAUSED=on;const A=SH.AU;try{if(A&&A.ctx)on?A.ctx.suspend():A.ctx.resume()}catch(e){}
+  document.body.classList.toggle('paused',on);const b=$('pbtn');if(b){b.textContent=on?'Resume':'Pause';b.setAttribute('aria-pressed',on)}
+  if(on)SH.modal(`<h2>Paused</h2><p>Your crops are resting and time has stopped. Nothing will grow or change until you come back.</p><button class="btn big" data-x="resume">Resume</button>`);else SH.close()}
+document.addEventListener('keydown',e=>{if(e.key==='p'||e.key==='P'){if(!/input|textarea/i.test(document.activeElement.tagName))setPause(!PAUSED)}if(e.key==='Escape'&&PAUSED)setPause(false)});
+
+/* ---------------- Sheets: side panels as one-at-a-time cards (no page scrolling) ---------------- */
+const SHEET={};
+function sheets(tab){const side=$('side');if(!side)return;side.querySelectorAll('.sheetbar').forEach(n=>n.remove());const ps=[...side.children].filter(n=>n.classList.contains('panel'));if(ps.length<2){side.classList.remove('sheeted');return}
+  side.classList.add('sheeted');const names=ps.map(p=>{const h=p.querySelector('h2');return h?h.textContent:'More'});
+  let i=SHEET[tab]||0;if(i>=ps.length)i=0;
+  ps.forEach((p,j)=>p.hidden=j!==i);
+  const bar=document.createElement('div');bar.className='sheetbar';bar.setAttribute('role','tablist');
+  bar.innerHTML=names.map((n,j)=>`<button class="chipbtn ${j===i?'on':''}" role="tab" aria-selected="${j===i}" data-x="sheet" data-k="${j}">${esc(n)}</button>`).join('');
+  side.prepend(bar)}
+
 /* ---------------- Init ---------------- */
-function init(){SH=window.SH;try{migrate();ensureDaily();seasonCheck();backup(false);SH.save()}catch(e){console.error('features init',e)}
+function init(){SH=window.SH;
+  const st=document.querySelector('.stats');if(st&&!$('pbtn'))st.insertAdjacentHTML('beforeend','<button class="btn hb" id="pbtn" data-x="pausebtn" aria-pressed="false">Pause</button>');try{migrate();ensureDaily();seasonCheck();backup(false);SH.save()}catch(e){console.error('features init',e)}
   setTimeout(()=>{try{x().tut<TUT.length?tutorial():dailyCheck()}catch(e){console.error(e)}},600);
   if(window.SHEnt)window.SHEnt.refresh().catch(()=>{})}
-window.SHX={tabs:TABS,init,side:sideView,after,emit,explore,mapGen,growMul};
+window.SHX={paused:()=>PAUSED,tabs:TABS,init,side:sideView,after,emit,explore,mapGen,growMul};
 })();
