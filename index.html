@@ -97,6 +97,7 @@ body.rain .drop{display:block}
   <div class="stats">
     <span class="pill" id="coins"></span><span class="pill" id="gems"></span>
     <span class="pill" id="lvl"></span><span class="pill" id="day"></span><span class="pill" id="wx"></span>
+    <button class="btn" id="mbtn" aria-pressed="true" style="min-height:36px;padding:2px 12px">Music on</button><button class="btn" id="sbtn" aria-pressed="true" style="min-height:36px;padding:2px 12px">Sounds on</button>
   </div>
 </header>
 <div class="scene" aria-hidden="true"><svg viewBox="0 0 800 190" preserveAspectRatio="xMidYMid slice">
@@ -167,6 +168,61 @@ const $=id=>document.getElementById(id);
 const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),1800)};
 const modal=h=>{$('box').innerHTML=h;$('modal').classList.add('on')};
 const close=()=>$('modal').classList.remove('on');
+/* ---------- Audio: original procedural music + sfx ---------- */
+const AU={ctx:null,master:null,mus:null,sfx:null,on:true,sfxOn:true,timer:null,step:0};
+try{const a=JSON.parse(localStorage.getItem('sh-audio'));if(a){AU.on=a.on;AU.sfxOn=a.sfxOn}}catch(e){}
+function auInit(){if(AU.ctx)return;const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+  const c=AU.ctx=new C();AU.master=c.createGain();AU.master.gain.value=.8;
+  const rev=c.createConvolver(),len=c.sampleRate*2.6,b=c.createBuffer(2,len,c.sampleRate);
+  for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4)}
+  rev.buffer=b;const wet=c.createGain();wet.gain.value=.35;rev.connect(wet).connect(c.destination);
+  AU.master.connect(c.destination);AU.master.connect(rev);
+  AU.mus=c.createGain();AU.mus.gain.value=AU.on?.32:0;AU.mus.connect(AU.master);
+  AU.sfx=c.createGain();AU.sfx.gain.value=AU.sfxOn?.5:0;AU.sfx.connect(AU.master)}
+function tone(f,t,d,{type='sine',vol=.3,out,att=.01,harm=0}={}){const c=AU.ctx;
+  const g=c.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+att);g.gain.exponentialRampToValueAtTime(.0001,t+d);g.connect(out||AU.sfx);
+  const o=c.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t);o.connect(g);o.start(t);o.stop(t+d+.05);
+  if(harm){const o2=c.createOscillator(),g2=c.createGain();g2.gain.value=harm;o2.frequency.value=f*2;o2.connect(g2).connect(g);o2.start(t);o2.stop(t+d+.05)}}
+const N=m=>440*Math.pow(2,(m-69)/12);
+/* gentle 3/4 waltz in F major: original melody, piano + music box + soft pad */
+const CH=[[53,57,60],[50,57,62],[58,62,65],[48,55,60],[53,57,60],[46,58,62],[48,52,55],[53,57,60]];
+const MEL=[72,null,74,76,null,79,77,null,76,74,null,72,
+           70,null,72,74,null,77,76,null,74,72,null,null,
+           72,null,74,76,null,81,79,null,77,76,null,74,
+           74,null,76,77,null,76,74,null,72,72,null,null];
+function musTick(){if(!AU.ctx)return;const c=AU.ctx,t=c.currentTime+.05,beat=.42,s=AU.step;
+  const bar=Math.floor(s/3)%8,ch=CH[bar],bi=s%3;
+  if(bi===0){tone(N(ch[0]-12),t,beat*3,{type:'triangle',vol:.16,out:AU.mus,att:.02});
+    ch.forEach(n=>tone(N(n),t,beat*3.2,{type:'sine',vol:.035,out:AU.mus,att:.5}))}
+  else tone(N(ch[bi]),t,beat*1.4,{type:'triangle',vol:.06,out:AU.mus});
+  const m=MEL[(s*2)%MEL.length],m2=MEL[(s*2+1)%MEL.length];
+  if(m)tone(N(m),t,beat*2.2,{type:'sine',vol:.11,out:AU.mus,harm:.25});
+  if(m2)tone(N(m2),t+beat/2,beat*1.8,{type:'sine',vol:.08,out:AU.mus,harm:.25});
+  if(s%24===23)tone(N(84),t+beat/2,beat*3,{type:'sine',vol:.05,out:AU.mus});
+  AU.step++}
+function musStart(){if(AU.timer)return;AU.timer=setInterval(musTick,420)}
+const SFX={
+ plant:()=>{const t=AU.ctx.currentTime;tone(520,t,.12,{type:'sine',vol:.3});tone(780,t+.06,.15,{vol:.2})},
+ water:()=>{const t=AU.ctx.currentTime;for(let i=0;i<5;i++)tone(900+Math.random()*700,t+i*.04,.08,{vol:.12})},
+ harvest:()=>{const t=AU.ctx.currentTime;[72,76,79].forEach((n,i)=>tone(N(n),t+i*.07,.35,{type:'triangle',vol:.22,harm:.2}))},
+ gold:()=>{const t=AU.ctx.currentTime;[72,76,79,84,88].forEach((n,i)=>tone(N(n),t+i*.06,.6,{vol:.2,harm:.3}))},
+ coin:()=>{const t=AU.ctx.currentTime;tone(N(88),t,.1,{type:'square',vol:.06});tone(N(93),t+.07,.25,{type:'square',vol:.06})},
+ step:()=>{const t=AU.ctx.currentTime;tone(300,t,.08,{type:'triangle',vol:.15})},
+ bonk:()=>{const t=AU.ctx.currentTime;const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(320,t);o.frequency.exponentialRampToValueAtTime(90,t+.12);g.gain.setValueAtTime(.3,t);g.gain.exponentialRampToValueAtTime(.001,t+.15);o.connect(g).connect(AU.sfx);o.start(t);o.stop(t+.2)},
+ fanfare:()=>{const t=AU.ctx.currentTime;[[67,0],[72,.12],[76,.24],[79,.36],[84,.55]].forEach(([n,d])=>tone(N(n),t+d,.5,{type:'triangle',vol:.22,harm:.3}))},
+ friend:()=>{const t=AU.ctx.currentTime;[79,84,88].forEach((n,i)=>tone(N(n),t+i*.1,.5,{vol:.15}))},
+ tap:()=>{const t=AU.ctx.currentTime;tone(660,t,.05,{vol:.08})},
+ no:()=>{const t=AU.ctx.currentTime;tone(220,t,.15,{type:'triangle',vol:.15});tone(196,t+.1,.2,{type:'triangle',vol:.15})}
+};
+const sfx=k=>{if(AU.ctx&&AU.sfxOn&&SFX[k])try{SFX[k]()}catch(e){}};
+function auSave(){try{localStorage.setItem('sh-audio',JSON.stringify({on:AU.on,sfxOn:AU.sfxOn}))}catch(e){}}
+function auUI(){const m=$('mbtn'),s=$('sbtn');if(m){m.textContent=AU.on?'Music on':'Music off';m.setAttribute('aria-pressed',AU.on)}if(s){s.textContent=AU.sfxOn?'Sounds on':'Sounds off';s.setAttribute('aria-pressed',AU.sfxOn)}}
+document.addEventListener('pointerdown',()=>{auInit();if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume();musStart()},{capture:true});
+document.addEventListener('click',e=>{const b=e.target.closest('#mbtn,#sbtn');if(!b)return;auInit();
+  if(b.id==='mbtn'){AU.on=!AU.on;AU.mus&&AU.mus.gain.setTargetAtTime(AU.on?.32:0,AU.ctx.currentTime,.3)}
+  else{AU.sfxOn=!AU.sfxOn;AU.sfx&&(AU.sfx.gain.value=AU.sfxOn?.5:0)}auSave();auUI()});
+document.addEventListener('visibilitychange',()=>{if(!AU.ctx)return;document.hidden?AU.ctx.suspend():AU.ctx.resume()});
+
 
 const face=(x,y)=>`<circle cx="${x-6}" cy="${y}" r="2.6" fill="#3b2a1e"/><circle cx="${x+6}" cy="${y}" r="2.6" fill="#3b2a1e"/><path d="M${x-4} ${y+5} q4 4 8 0" stroke="#3b2a1e" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="${x-11}" cy="${y+4}" r="3" fill="#ff8fa6" opacity=".7"/><circle cx="${x+11}" cy="${y+4}" r="3" fill="#ff8fa6" opacity=".7"/>`;
 function cropBody(k){const c=CROPS[k];
@@ -239,13 +295,13 @@ function explore(i){const t=S.map[i];
   if(t.open){if(near(i)||i===S.pos)S.pos=i;return}
   if(!near(i))return toast('Explore next to where you stand');
   if(S.energy<1)return toast('Too tired — rest at camp');
-  S.energy--;t.open=true;S.pos=i;S.st.explored++;
+  S.energy--;sfx('step');t.open=true;S.pos=i;S.st.explored++;
   const e=t.e;
   if(e==='coins'){const n=15+(Math.random()*30|0);S.coins+=n;toast('Found '+n+' coins under a mushroom!');t.e='done'}
   else if(e==='gem'){S.gems++;toast('A sparkly gem!');t.e='done'}
   else if(e==='seed'){const k=Math.random()<.7?'moonmelon':'starfruit';S.rare[k]=(S.rare[k]||0)+1;toast('Rare seed: '+CROPS[k].name+'!');t.e='done'}
-  else if(e==='chest'){const n=60+(Math.random()*80|0);S.coins+=n;S.gems+=2;modal(`${ICON.chest}<h2>Treasure chest!</h2><p>${n} coins and 2 gems inside.</p><button class="btn big" data-a="close">Yay!</button>`);t.e='done'}
-  else if(e==='friend'){S.friends++;modal(`${ICON.friend}<h2>Fuzzle joins you!</h2><p>Your forest friends make villagers pay 5% more each.</p><button class="btn big" data-a="close">Welcome, buddy</button>`);t.e='done'}
+  else if(e==='chest'){const n=60+(Math.random()*80|0);S.coins+=n;S.gems+=2;sfx('fanfare');modal(`${ICON.chest}<h2>Treasure chest!</h2><p>${n} coins and 2 gems inside.</p><button class="btn big" data-a="close">Yay!</button>`);t.e='done'}
+  else if(e==='friend'){S.friends++;sfx('friend');modal(`${ICON.friend}<h2>Fuzzle joins you!</h2><p>Your forest friends make villagers pay 5% more each.</p><button class="btn big" data-a="close">Welcome, buddy</button>`);t.e='done'}
   else if(e==='mole')moleFight(t);
   else toast('Just soft grass and birdsong.');
 }
@@ -256,28 +312,28 @@ function moleFight(t){mole={hp:12,t,left:6};modal(`<div class="wob" data-a="hit"
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-tab],[data-t],[data-s],[data-i],[data-o],[data-sell],[data-m],[data-q],[data-buy],[data-a]');if(!t)return;
   const d=t.dataset;
-  if(d.tab)S.tab=d.tab;
+  if(d.tab){S.tab=d.tab;sfx('tap')}
   else if(d.a==='close')close();
-  else if(d.a==='hit'&&mole){mole.hp--;$('mhp').textContent='HP '+mole.hp+' · '+mole.left+'s';if(mole.hp<=0){clearInterval(mole.timer);S.st.mole++;S.gems+=3;S.coins+=50;mole.t.e='done';mole=null;modal(`${ICON.gem}<h2>Mole defeated!</h2><p>He dropped 3 gems and 50 coins as he scurried off.</p><button class="btn big" data-a="close">Victory!</button>`)}}
+  else if(d.a==='hit'&&mole){mole.hp--;sfx('bonk');$('mhp').textContent='HP '+mole.hp+' · '+mole.left+'s';if(mole.hp<=0){clearInterval(mole.timer);S.st.mole++;S.gems+=3;S.coins+=50;mole.t.e='done';mole=null;modal(`${ICON.gem}<h2>Mole defeated!</h2><p>He dropped 3 gems and 50 coins as he scurried off.</p><button class="btn big" data-a="close">Victory!</button>`)}}
   else if(d.a==='rest'){newDay()}
   else if(d.a==='copy'){const u=$('url').value;navigator.clipboard?.writeText(u).then(()=>toast('Link copied'),()=>toast('Copy blocked — select the link'))}
   else if(d.a==='regen'){drawQR($('url').value);toast('QR updated');return}
-  else if(d.t){if(d.t==='all'){let n=0;S.plots.forEach(p=>{if(p&&stageOf(p)<3){p.w=30;n++}});toast(n?'Splish splash!':'Nothing to water')}else S.tool=d.t}
+  else if(d.t){if(d.t==='all'){let n=0;S.plots.forEach(p=>{if(p&&stageOf(p)<3){p.w=30;n++}});sfx(n?'water':'no');toast(n?'Splish splash!':'Nothing to water')}else S.tool=d.t}
   else if(d.s){S.seed=d.s;S.tool='seed'}
   else if(d.i!=null){const i=+d.i,p=S.plots[i];
     if(p&&stageOf(p)===3){const now=Date.now();S.combo=now-S.lastH<2500?S.combo+1:1;S.lastH=now;S.st.combo=Math.max(S.st.combo,S.combo);
       const n=p.gold?5:1;S.basket[p.k]=(S.basket[p.k]||0)+n;S.st.harvest++;if(p.gold)S.st.gold++;if(CROPS[p.k].rare)S.st.rare++;
       const bonus=S.combo>=3?S.combo*2:0;S.coins+=bonus;S.xp+=CROPS[p.k].time/5;S.plots[i]=null;
-      toast((p.gold?'GOLDEN! +5 ':'+1 ')+CROPS[p.k].name+(bonus?' · combo +'+bonus:''))}
+      sfx(p.gold?'gold':'harvest');toast((p.gold?'GOLDEN! +5 ':'+1 ')+CROPS[p.k].name+(bonus?' · combo +'+bonus:''))}
     else if(!p&&S.tool!=='water'){const k=S.seed,c=CROPS[k];
       if(c.rare){if(!S.rare[k])return toast('No '+c.name+' seeds left');S.rare[k]--;if(!S.rare[k])S.seed='turnip'}
-      else if(S.coins<c.cost)return toast('Need '+c.cost+' coins');else S.coins-=c.cost;
-      const gc=WEATHER[S.wx][0]==='Rainbow'?.25:.08;S.plots[i]={k,g:0,w:0,gold:Math.random()<gc}}
-    else if(p){p.w=30;toast('Watered')}}
-  else if(d.o!=null){const o=S.orders[+d.o];S.basket[o.k]-=o.n;S.coins+=o.pay;S.xp+=10;S.st.orders++;S.orders.splice(+d.o,1);toast(o.who+' says thank you! +'+o.pay)}
-  else if(d.sell){S.basket[d.sell]--;S.coins+=price(d.sell)}
+      else if(S.coins<c.cost)return (sfx('no'),toast('Need '+c.cost+' coins'));else S.coins-=c.cost;
+      const gc=WEATHER[S.wx][0]==='Rainbow'?.25:.08;S.plots[i]={k,g:0,w:0,gold:Math.random()<gc};sfx('plant')}
+    else if(p){p.w=30;sfx('water');toast('Watered')}}
+  else if(d.o!=null){const o=S.orders[+d.o];S.basket[o.k]-=o.n;S.coins+=o.pay;S.xp+=10;S.st.orders++;S.orders.splice(+d.o,1);sfx('coin');toast(o.who+' says thank you! +'+o.pay)}
+  else if(d.sell){S.basket[d.sell]--;S.coins+=price(d.sell);sfx('coin')}
   else if(d.m!=null)explore(+d.m);
-  else if(d.q){const q=QUESTS.find(x=>x.id===d.q);S.claimed[q.id]=1;S.coins+=q.r.coins||0;S.gems+=q.r.gems||0;modal(`${ICON.chest}<h2>Quest complete!</h2><p>${q.t}</p><button class="btn big" data-a="close">Collect</button>`)}
+  else if(d.q){const q=QUESTS.find(x=>x.id===d.q);S.claimed[q.id]=1;sfx('fanfare');S.coins+=q.r.coins||0;S.gems+=q.r.gems||0;modal(`${ICON.chest}<h2>Quest complete!</h2><p>${q.t}</p><button class="btn big" data-a="close">Collect</button>`)}
   else if(d.buy){const cost={moonmelon:3,starfruit:5,sprinkler:2}[d.buy];S.gems-=cost;if(d.buy==='sprinkler'){S.sprink=S.day;toast('Sprinkler on for today')}else{S.rare[d.buy]=(S.rare[d.buy]||0)+1;toast('Got a '+CROPS[d.buy].name+' seed')}}
   save();render();
 });
@@ -302,7 +358,7 @@ setInterval(()=>{
   save();
   if(!$('modal').classList.contains('on')||!mole){if(S.tab==='share')renderStats();else render()}
 },1000);
-render();
+render();auUI();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
