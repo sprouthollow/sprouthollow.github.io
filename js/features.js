@@ -10,7 +10,7 @@ const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+
 let SH=null;const S=()=>SH.S;const x=()=>S().x;
 
 /* ---------------- Data ---------------- */
-const MATS={wood:'Twig bundle',petal:'Wild petals',mush:'Glow mushroom',moon:'Moonstone',frost:'Frost crystal',feather:'Star feather'};
+const MATS={crystal:'Creek crystal',lily:'Water lily',wood:'Twig bundle',petal:'Wild petals',mush:'Glow mushroom',moon:'Moonstone',frost:'Frost crystal',feather:'Star feather'};
 const SEASONS=[
  {id:'spring',name:'Spring',grow:1.1,tint:'#ffd9e4',fx:'petal',note:'Blossoms drift and crops grow a little faster.',bonus:'berry'},
  {id:'summer',name:'Summer',grow:1.15,tint:'#fff1b8',fx:'firefly',note:'Long sunny days. Sunflowers love it.',bonus:'sunflower'},
@@ -39,6 +39,13 @@ const COMPANIONS={
  lumi:{name:'Lumi',desc:'A glowing firefly who lights the way home.',rarity:'Rare',personality:'Bright, brave and loyal',food:'sunflower',perk:'Finds star feathers',found:'secret'},
  emberkin:{name:'Emberkin',desc:'A baby magical dragon, warm as a teacup.',rarity:'Legendary',personality:'Proud, playful and secretly soft',food:'starfruit',perk:'Crops grow 5% faster',found:'legend'}
 };
+const FISH={
+ minnow:{name:'Minnow Puff',rarity:'Common',sell:15,w:40,col:'#b8d9e8',desc:'Round as a dumpling, quick as a giggle.'},
+ trout:{name:'Pebble Trout',rarity:'Common',sell:25,w:30,col:'#a8c3a0',desc:'Speckled like creek stones.'},
+ koi:{name:'Blossom Koi',rarity:'Uncommon',sell:60,w:14,col:'#f4bfa7',seasons:['spring','summer'],desc:'Its fins look like cherry petals.'},
+ carp:{name:'Moon Carp',rarity:'Rare',sell:120,w:6,col:'#c9b9e8',weather:2,desc:'Only rises on rainy days.'},
+ eel:{name:'Crystal Eel',rarity:'Rare',sell:140,w:6,col:'#9fe6f6',seasons:['winter'],desc:'Glitters like frozen starlight.'},
+ lantern:{name:'Lantern Fish',rarity:'Legendary',sell:400,w:1.5,col:'#ffd98a',desc:'A warm glow in the deep. Rainbow days bring it closer.'}};
 const SKINS=['Classic','Blossom ribbon','Starlit sparkle'];
 const OLD_COMP={fuzzle:'fluffkin',moss:'mossbun',pip:'pippin',lumi:'lumi',moth:'mushling',frog:'mossbun'};
 const SECRETS=[
@@ -60,12 +67,15 @@ const RECIPES={
  mlamp:{name:'Mushroom Lamp',need:{mush:3,wood:1},kind:'decor',slot:'floor',desc:'Glows a soft teal.'},
  rug:{name:'Petal Rug',need:{petal:5},kind:'decor',slot:'rug',desc:'Soft as a spring morning.'},
  chime:{name:'Moon Chime',need:{moon:2,feather:1},kind:'decor',slot:'window',desc:'Sings in the breeze.'},
+ clamp:{name:'Crystal Lamp',need:{crystal:2,wood:1},kind:'decor',slot:'floor',desc:'Glows like the creek at dusk.'},
+ tea:{name:'Lily Tea',need:{lily:2,petal:1},kind:'sell',sell:90,desc:'Fragrant and calming.'},
  snowglobe:{name:'Snow Globe',need:{frost:2,wood:1},kind:'decor',slot:'shelf',desc:'A tiny winter inside glass.'}};
 const DECOR={
  lantern:{name:'Glow Lantern',slot:'wall'},crown:{name:'Flower Crown',slot:'shelf'},stool:{name:'Twig Stool',slot:'floor'},
  mlamp:{name:'Mushroom Lamp',slot:'floor'},rug:{name:'Petal Rug',slot:'rug'},chime:{name:'Moon Chime',slot:'window'},snowglobe:{name:'Snow Globe',slot:'shelf'},
  plant:{name:'Potted Fern',slot:'floor',cost:60},frame:{name:'Meadow Painting',slot:'wall',cost:90},curtain:{name:'Gingham Curtains',slot:'window',cost:70},
  teapot:{name:'Teapot',slot:'shelf',cost:50},quilt:{name:'Patchwork Quilt',slot:'rug',cost:120},
+ clamp:{name:'Crystal Lamp',slot:'floor'},
  sakura:{name:'Sakura Branch',slot:'wall',season:'spring'},fan:{name:'Paper Fan',slot:'wall',season:'summer'},acorn:{name:'Acorn Garland',slot:'window',season:'autumn'},mitten:{name:'Mitten Bunting',slot:'window',season:'winter'}};
 const SLOTS=[['wall','Wall'],['window','Window'],['shelf','Shelf'],['floor','Floor'],['rug','Rug']];
 const QUESTLINES=[
@@ -96,10 +106,12 @@ const ACHIEVE=[
  {id:'decor',name:'Home Sweet Home',t:'Fill every cottage spot',v:s=>Object.values(s.x.cottage).filter(Boolean).length,n:5},
  {id:'companions',name:'Forest Family',t:'Collect 4 companions',v:s=>Object.keys(s.x.comp).length,n:4},
  {id:'seasons',name:'Four Seasons',t:'Reach day 29',v:s=>s.day,n:29},
+ {id:'angler',name:'Gone Fishing',t:'Catch 10 fish',v:s=>Object.values(s.x.fish.caught).reduce((a,b)=>a+b,0),n:10},
  {id:'stories',name:'Storyteller',t:'Finish 2 questlines',v:s=>Object.values(s.x.ql).filter(q=>q.done).length,n:2}];
 const COLLECTIONS=[
  {id:'crops',name:'Every crop grown',items:()=>Object.keys(SH.CROPS),have:s=>k=>(s.x.c.grown[k]||0)>0,label:k=>SH.CROPS[k].name,reward:{gems:5}},
  {id:'comp',name:'Forest companions',items:()=>Object.keys(COMPANIONS),have:s=>k=>!!s.x.comp[k],label:k=>COMPANIONS[k].name,reward:{gems:8,decor:'sakura'}},
+ {id:'fish',name:'Creek fish',items:()=>Object.keys(FISH),have:s=>k=>!!s.x.fish.caught[k],label:k=>FISH[k].name,reward:{gems:6,decor:'clamp'}},
  {id:'secrets',name:'Secret places',items:()=>SECRETS.map(q=>q.id),have:s=>k=>!!s.x.secrets[k],label:k=>SECRETS.find(q=>q.id===k).name,reward:{gems:10,coins:500}}];
 const MARKET=[
  {id:'pack_sakura',name:'Sakura Cottage Pack',kind:'Decoration pack',desc:'Blossom wallpaper, a cherry-wood bed and petal lanterns.',price:'$1.99'},
@@ -111,7 +123,7 @@ const MARKET=[
 /* ---------------- State ---------------- */
 function defaults(){return{v:SAVE_VERSION,tut:0,daily:{last:'',visits:0},mats:{},items:{},decor:{},cottage:{wall:null,window:null,shelf:null,floor:null,rug:null},
  npc:{},talked:{},comp:{fluffkin:{aff:0,skin:0}},fed:{},petted:{},secrets:{},ql:{},dq:{date:'',list:[]},ach:{},coll:{},
- c:{harvest:0,explore:0,orders:0,grown:{},crafted:{},talk:0,pet:0},player:{hat:'#e98aa4',name:'Farmer'},lastSeason:-1,journalTab:'disc',slot:null,dlg:null}}
+ c:{harvest:0,explore:0,orders:0,grown:{},crafted:{},talk:0,pet:0},player:{hat:'#e98aa4',name:'Farmer'},fish:{caught:{},bag:{}},creek:{date:'',crystals:[0,0,0],lilies:[0,0,0]},lastSeason:-1,journalTab:'disc',slot:null,dlg:null}}
 function migrate(){const s=S();
   if(!s.x||typeof s.x!=='object')s.x={};
   const old=s.x.v||0;
@@ -120,7 +132,7 @@ function migrate(){const s=S();
   for(const k in d.cottage)if(!(k in s.x.cottage))s.x.cottage[k]=null;
   // carry over progress from v2 saves
   if(old<3){s.x.c.harvest=Math.max(s.x.c.harvest,(s.st&&s.st.harvest)||0);s.x.c.explore=Math.max(s.x.c.explore,(s.st&&s.st.explored)||0);s.x.c.orders=Math.max(s.x.c.orders,(s.st&&s.st.orders)||0);if(s.friends>0)s.x.comp.fuzzle=s.x.comp.fuzzle||{aff:0};if(s.xp>0)s.x.tut=99}
-  if(!s.x.fed)s.x.fed={};
+  if(!s.x.fed)s.x.fed={};if(!s.x.fish)s.x.fish={caught:{},bag:{}};if(!s.x.creek)s.x.creek={date:'',crystals:[0,0,0],lilies:[0,0,0]};
   for(const k of Object.keys(s.x.comp)){if(!COMPANIONS[k]){const n=OLD_COMP[k]||'fluffkin';const o=s.x.comp[k];delete s.x.comp[k];if(!s.x.comp[n])s.x.comp[n]={aff:o.aff||0,skin:0};else s.x.comp[n].aff=Math.max(s.x.comp[n].aff,o.aff||0)}else if(s.x.comp[k].skin===undefined)s.x.comp[k].skin=0}
   if(!Object.keys(s.x.comp).length)s.x.comp.fluffkin={aff:0,skin:0};
   s.x.v=SAVE_VERSION;s.x.dlg=null}
@@ -144,7 +156,7 @@ function npcSVG(k){const n=NPCS[k],c=n.col;
   bun:`<ellipse cx="20" cy="8" rx="5" ry="12" fill="${c}"/><ellipse cx="40" cy="8" rx="5" ry="12" fill="${c}"/><rect x="22" y="10" width="16" height="6" rx="2" fill="#5b4a7a"/>`,
   mochi:`<path d="M14 22 l4 -14 l9 8z M46 22 l-4 -14 l-9 8z" fill="${c}"/>`}[k];
  return `<svg viewBox="0 0 60 60"><circle cx="30" cy="34" r="22" fill="${c}"/>${ears}<circle cx="30" cy="36" r="17" fill="#fff6ec"/>${face(30,36,.9)}${k==='mochi'?'<path d="M20 41 h-8 M20 44 h-7 M40 41 h8 M40 44 h7" stroke="#4a3628" stroke-width="1"/>':''}</svg>`}
-function compSVG(k){const sk=(S()&&S().x&&S().x.comp[k]&&S().x.comp[k].skin)||0;try{return `<img class="pix" alt="${COMPANIONS[k]?COMPANIONS[k].name:''}" src="${window.SHPix.spriteURL(k,sk)}">`}catch(e){return''}}
+function compSVG(k){const sk=(S()&&S().x&&S().x.comp[k]&&S().x.comp[k].skin)||0;try{return window.SHScenes.creature(k,sk)}catch(e){return''}}
 const hearts=(n,max=10)=>`<span class="hearts" aria-label="${n} of ${max} hearts">${Array.from({length:max},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</span>`;
 function decorSVG(k){const m={
  lantern:'<rect x="22" y="14" width="16" height="24" rx="5" fill="#ffd98a"/><rect x="24" y="8" width="12" height="6" fill="#8a6a5a"/><circle cx="30" cy="26" r="5" fill="#fff6b0"/>',
@@ -162,9 +174,10 @@ function decorSVG(k){const m={
  sakura:'<path d="M8 16 q20 4 44 -4" stroke="#8a5a40" stroke-width="3" fill="none"/>'+[[16,16],[28,14],[40,10],[22,22],[46,16]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#ffc6d2"/>`).join(''),
  fan:'<path d="M30 40 l-18 -22 a24 24 0 0 1 36 0z" fill="#fff3b0" stroke="#e0a060"/><path d="M30 40 v8" stroke="#8a5a40" stroke-width="3"/>',
  acorn:'<path d="M8 12 q22 14 44 0" stroke="#8a5a40" stroke-width="2" fill="none"/>'+[14,24,34,44].map((x,i)=>`<ellipse cx="${x}" cy="${18+(i%2)*2}" rx="4" ry="5" fill="#c08a5a"/><path d="M${x-4} ${15+(i%2)*2} h8" stroke="#6b4a2a" stroke-width="3"/>`).join(''),
+ clamp:'<path d="M22 44 h16 l-3 -8 h-10z" fill="#a87a52"/><path d="M24 36 l3 -22 l6 10 l5 -14 l3 26z" fill="#c9b9e8" stroke="#fff"/><circle cx="31" cy="26" r="14" fill="#9fe6f6" opacity=".35"/>',
  mitten:'<path d="M8 10 q22 12 44 0" stroke="#bbb" stroke-width="2" fill="none"/>'+[14,26,38,48].map((x,i)=>`<rect x="${x-4}" y="${14+(i%2)*2}" width="8" height="11" rx="4" fill="${['#ffadbd','#b8d8f0','#d8cdf2','#b8e0b0'][i]}"/>`).join('')};
  return `<svg viewBox="0 0 60 50">${m[k]||''}</svg>`}
-const matIcon=k=>({wood:'<path d="M14 34 l32 -10 M16 28 l30 -8 M18 40 l26 -8" stroke="#a86c3d" stroke-width="5" stroke-linecap="round"/>',petal:'<g fill="#ffb8c8"><ellipse cx="24" cy="26" rx="7" ry="11" transform="rotate(-30 24 26)"/><ellipse cx="36" cy="28" rx="7" ry="11" transform="rotate(30 36 28)"/></g>',mush:'<path d="M14 30 q16 -22 32 0z" fill="#8fd8cf"/><rect x="26" y="30" width="8" height="12" rx="3" fill="#fff8ee"/>',moon:'<path d="M26 10 a14 14 0 1 0 14 22 a11 11 0 1 1 -14 -22z" fill="#d8cdf2"/>',frost:'<path d="M30 8 v34 M14 17 l32 16 M46 17 l-32 16" stroke="#9ec8f0" stroke-width="4" stroke-linecap="round"/>',feather:'<path d="M18 44 q4 -30 26 -36 q-2 24 -26 36z" fill="#fff3b0" stroke="#e8c060"/>'}[k]);
+const matIcon=k=>({crystal:'<path d="M22 42 L28 14 L34 42z M32 42 L40 20 L46 42z" fill="#c9b9e8" stroke="#fff"/>',lily:'<ellipse cx="30" cy="34" rx="18" ry="7" fill="#7fbf7a"/><circle cx="30" cy="28" r="7" fill="#f9bcd3"/><circle cx="30" cy="28" r="3" fill="#fff3a0"/>',wood:'<path d="M14 34 l32 -10 M16 28 l30 -8 M18 40 l26 -8" stroke="#a86c3d" stroke-width="5" stroke-linecap="round"/>',petal:'<g fill="#ffb8c8"><ellipse cx="24" cy="26" rx="7" ry="11" transform="rotate(-30 24 26)"/><ellipse cx="36" cy="28" rx="7" ry="11" transform="rotate(30 36 28)"/></g>',mush:'<path d="M14 30 q16 -22 32 0z" fill="#8fd8cf"/><rect x="26" y="30" width="8" height="12" rx="3" fill="#fff8ee"/>',moon:'<path d="M26 10 a14 14 0 1 0 14 22 a11 11 0 1 1 -14 -22z" fill="#d8cdf2"/>',frost:'<path d="M30 8 v34 M14 17 l32 16 M46 17 l-32 16" stroke="#9ec8f0" stroke-width="4" stroke-linecap="round"/>',feather:'<path d="M18 44 q4 -30 26 -36 q-2 24 -26 36z" fill="#fff3b0" stroke="#e8c060"/>'}[k]);
 
 /* ---------------- Map generation & exploration ---------------- */
 function mapGen(m){
@@ -192,7 +205,7 @@ function secretSVG(id){const pal={glade:['#2f4a6a','#cfe3ff'],ring:['#4f7a4a','#
  return `<svg viewBox="0 0 200 110"><rect width="200" height="110" rx="14" fill="${pal[0]}"/><circle cx="160" cy="26" r="12" fill="#fff6c0" opacity=".9"/><path d="M0 80 q50 -30 100 -6 t100 -4 v40 h-200z" fill="#0003"/><g fill="${pal[1]}">${Array.from({length:14},(_,i)=>`<circle cx="${10+i*14}" cy="${30+((i*37)%40)}" r="${1+(i%3)}" opacity=".8"/>`).join('')}</g><ellipse cx="100" cy="80" rx="40" ry="10" fill="${pal[1]}" opacity=".5"/></svg>`}
 
 /* ---------------- Daily systems ---------------- */
-const DQ_POOL=[{k:'harvest',t:n=>`Harvest ${n} crops`,n:[4,6,8]},{k:'explore',t:n=>`Explore ${n} Whisperwood tiles`,n:[3,4,5]},{k:'talk',t:n=>`Chat with ${n} villagers`,n:[2,3]},{k:'pet',t:n=>`Pet ${n} companions`,n:[1,2]},{k:'craft',t:n=>`Craft ${n} item${n>1?'s':''}`,n:[1,2]},{k:'order',t:n=>`Fill ${n} village order${n>1?'s':''}`,n:[1,2]}];
+const DQ_POOL=[{k:'harvest',t:n=>`Harvest ${n} crops`,n:[4,6,8]},{k:'explore',t:n=>`Explore ${n} Whisperwood tiles`,n:[3,4,5]},{k:'talk',t:n=>`Chat with ${n} villagers`,n:[2,3]},{k:'pet',t:n=>`Pet ${n} companions`,n:[1,2]},{k:'craft',t:n=>`Craft ${n} item${n>1?'s':''}`,n:[1,2]},{k:'order',t:n=>`Fill ${n} village order${n>1?'s':''}`,n:[1,2]},{k:'fish',t:n=>`Catch ${n} fish at Crystal Creek`,n:[2,3]}];
 function ensureDaily(){const d=x().dq;if(d.date===today())return;const pool=[...DQ_POOL].sort(()=>Math.random()-.5).slice(0,3);d.date=today();x().fed={};d.list=pool.map(p=>{const n=rnd(p.n);return{k:p.k,n,v:0,t:p.t(n),claimed:false,r:{coins:30+n*10,[rnd(['wood','petal','mush'])]:2}}});x().talked={};x().petted={}}
 function bumpDaily(k){ensureDaily();x().dq.list.forEach(q=>{if(q.k===k&&q.v<q.n)q.v++})}
 const DAILY_GIFTS=[{coins:40},{wood:3,petal:2},{coins:60},{mush:3},{coins:80,petal:3},{moon:1,wood:2},{gems:3,coins:100}];
@@ -227,12 +240,13 @@ function checkAll(){const s=S();
     if(st.stage>=q.stages.length&&!st.ready){st.ready=true;SH.toast(q.name+' complete! Visit '+NPCS[q.npc].name)}})}
 
 /* ---------------- Views ---------------- */
-const TABS=['village','cottage','collection','journal','market'];
+const TABS=['village','cottage','collection','journal','market','creek'];
 function boardView(tab){const s=S();
   if(tab==='village')return `<div class="village">${Object.keys(NPCS).map(k=>{const n=NPCS[k],h=s.x.npc[k]||0;return `<button class="npc" data-x="talk" data-k="${k}" aria-label="Talk to ${n.name}"><span class="por">${npcSVG(k)}</span><b>${n.name}</b>${hearts(Math.min(h,10))}<small>${s.x.talked[k]?'Chatted today':'Tap to chat'}</small></button>`}).join('')}</div>${s.x.dlg?dialogView():''}`;
   if(tab==='cottage')return cottageView();
   if(tab==='journal')return journalView();
   if(tab==='collection')return collectionView();
+  if(tab==='creek')return creekView();
   if(tab==='market')return marketView();
   return''}
 function dialogView(){const d=x().dlg,n=NPCS[d.k],h=x().npc[d.k]||0;const ql=QUESTLINES.find(q=>q.npc===d.k);const st=ql&&x().ql[ql.id];
@@ -252,6 +266,7 @@ function journalView(){const s=S(),t=s.x.journalTab;
   let body='';
   if(t==='disc'){body=`<h3>Secret places</h3><div class="grid">${SECRETS.map(q=>s.x.secrets[q.id]?`<div class="card found">${secretSVG(q.id)}<b>${q.name}</b><small>${q.desc}</small></div>`:`<div class="card locked"><b>???</b><small>Somewhere in Whisperwood</small></div>`).join('')}</div>
    <h3>Companions</h3><div class="grid">${Object.keys(COMPANIONS).map(k=>s.x.comp[k]?`<div class="card found">${compSVG(k)}<b>${COMPANIONS[k].name}</b><small>${COMPANIONS[k].perk}</small></div>`:`<div class="card locked"><b>???</b><small>${{woods:'Wanders Whisperwood',secret:'Glows near a moonlit place',legend:'Sleeps where old lanterns hang'}[COMPANIONS[k].found]}</small></div>`).join('')}</div>
+   <h3>Creek fish</h3><div class="grid">${Object.keys(FISH).map(k=>s.x.fish.caught[k]?`<div class="card found">${fishSVG(k)}<b>${FISH[k].name}</b><small>${FISH[k].rarity} · ${s.x.fish.caught[k]} caught</small></div>`:`<div class="card locked"><b>???</b><small>${FISH[k].rarity}</small></div>`).join('')}</div>
    <h3>Crops grown</h3><div class="grid">${Object.keys(SH.CROPS).map(k=>{const n=s.x.c.grown[k]||0;return `<div class="card ${n?'found':'locked'}">${n?SH.cropSVG({k,gold:false},3):''}<b>${n?SH.CROPS[k].name:'???'}</b><small>${n?n+' grown':'Not grown yet'}</small></div>`}).join('')}</div>`}
   if(t==='ach')body=ACHIEVE.map(a=>{const v=Math.min(a.n,a.v(s));return `<div class="row ach ${s.x.ach[a.id]?'got':''}"><span><b>${a.name}</b><br><small>${a.t}</small></span><span>${s.x.ach[a.id]?'Earned':v+' / '+a.n}</span></div><div class="meter"><i style="width:${v/a.n*100}%"></i></div>`}).join('');
   if(t==='coll')body=COLLECTIONS.map(c=>{const it=c.items(),h=c.have(s),n=it.filter(h).length,done=n===it.length,cl=s.x.coll[c.id];return `<div class="panel inner"><div class="row"><span><b>${c.name}</b> · ${n}/${it.length}</span><button class="btn" data-x="coll" data-k="${c.id}" ${done&&!cl?'':'disabled'}>${cl?'Claimed':'Reward: '+rewardText(c.reward)}</button></div><p class="chips">${it.map(k=>`<span class="chip ${h(k)?'on':''}">${h(k)?c.label(k):'???'}</span>`).join('')}</p></div>`}).join('');
@@ -266,6 +281,39 @@ function collectionView(){const s=S();const own=Object.keys(COMPANIONS);
    return `<div class="card found creature"><span class="rar r-${c.rarity.toLowerCase()}">${c.rarity}</span>${compSVG(k)}<b>${c.name}</b>${hearts(Math.min(5,lvl),5)}<small>${c.desc}</small><small><b>Personality:</b> ${c.personality}<br><b>Favorite food:</b> ${fav?fav.name:'?'}<br><b>Gift:</b> ${c.perk}</small>
    <div class="tools center"><button class="btn small" data-x="pet" data-k="${k}">${s.x.petted[k]?'Petted today':'Pet'}</button><button class="btn small" data-x="feed" data-k="${k}" ${s.x.fed[k]||!Object.values(s.basket).some(n=>n>0)?'disabled':''}>${s.x.fed[k]?'Fed today':'Feed'}</button></div>
    <div class="tools center">${SKINS.map((nm,i)=>`<button class="chipbtn ${o.skin===i?'on':''}" data-x="skin" data-k="${k}" data-c="${i}" ${o.aff>=i*5?'':'disabled'} title="${o.aff>=i*5?nm:'Unlocks at '+(i*5)+' affection'}">${o.aff>=i*5?nm:'Locked'}</button>`).join('')}</div></div>`}).join('')}</div></div>`}
+/* ---------------- Crystal Creek & fishing ---------------- */
+const creekOpen=()=>SH.lvl()>=2||x().c.explore>=8;
+let F={st:'idle',msg:'Cast your line into the creek.',fish:null,t:0};
+function fishSVG(k){const c=FISH[k].col;return `<svg viewBox="0 0 80 50"><path d="M58 25 l16 -12 v24z" fill="${c}" stroke="#6b5048" stroke-width="2"/><ellipse cx="36" cy="25" rx="26" ry="16" fill="${c}" stroke="#6b5048" stroke-width="2"/><ellipse cx="30" cy="20" rx="10" ry="5" fill="#fff" opacity=".5"/><circle cx="20" cy="22" r="3" fill="#3b2a24"/><circle cx="19" cy="21" r="1" fill="#fff"/><ellipse cx="16" cy="29" rx="4" ry="2" fill="#ffadbd" opacity=".8"/><path d="M30 34 q6 6 12 0" stroke="#6b5048" stroke-width="1.5" fill="none"/>${k==='lantern'?'<circle cx="36" cy="25" r="24" fill="#fff3b0" opacity=".35"/>':''}</svg>`}
+function rollFish(){const sea=season().id,wx=SH.S.wx;const pool=Object.entries(FISH).filter(([k,f])=>(!f.seasons||f.seasons.includes(sea))&&(f.weather===undefined||f.weather===wx));
+  let tot=0;const w=pool.map(([k,f])=>{let v=f.w;if(k==='lantern'&&wx===3)v*=6;if(x().comp.lumi&&k==='lantern')v*=2;tot+=v;return[k,v]});let r=Math.random()*tot;for(const [k,v] of w){if((r-=v)<=0)return k}return'minnow'}
+function creekDaily(){const c=x().creek;if(c.date!==today()){c.date=today();c.crystals=[0,0,0];c.lilies=[0,0,0]}}
+function cast(){if(F.st==='wait'||F.st==='bite')return;const id=Date.now();F={st:'wait',msg:'Waiting for a nibble...',fish:null,t:id};SH.sfx('water');
+  const bite=()=>{if(F.t!==id||F.st!=='wait')return;if(PAUSED)return setTimeout(bite,500);F.st='bite';F.fish=rollFish();F.msg='Something is tugging! Reel in!';SH.sfx('coin');SH.render();
+    setTimeout(()=>{if(F.t===id&&F.st==='bite'){F={st:'done',msg:'It slipped away. Try again!',fish:null,t:0};SH.render()}},1500)};
+  setTimeout(bite,1800+Math.random()*3200);SH.render()}
+function reel(){if(F.st==='wait'){F={st:'done',msg:'Too early! Wait for the bobber to dip and the "!" to appear.',fish:null,t:0};SH.sfx('no');SH.render();return}
+  if(F.st!=='bite')return;const k=F.fish,s=S();add(s.x.fish.caught,k,1);add(s.x.fish.bag,k,1);bumpDaily('fish');const fsh=FISH[k];F={st:'done',msg:'Nice catch! Cast again whenever you like.',fish:null,t:0};
+  SH.sfx(fsh.rarity==='Common'?'harvest':'gold');SH.modal(`<div class="fishpic">${fishSVG(k)}</div><h2>You caught a ${fsh.name}!</h2><p><span class="rar r-${fsh.rarity.toLowerCase()}">${fsh.rarity}</span></p><p>${fsh.desc}</p><button class="btn big" data-a="close">Hooray!</button>`);checkAll();SH.save();SH.render()}
+function creekView(){creekDaily();const c=x().creek;
+  if(!creekOpen())return `<div class="lockmsg"><h3>Crystal Creek</h3><p>The path to the creek is overgrown. Explore 8 Whisperwood tiles or reach level 2 to clear it.</p><p class="note">Explored so far: ${x().c.explore}/8</p></div>`;
+  const st=F.st,bob=st==='bite'?'bite':st==='wait'?'float':'';
+  const spot=(arr,i,kind,x0,y0,svg)=>arr[i]?'':`<g class="pick" data-x="${kind}" data-k="${i}" role="button" aria-label="Collect ${kind==='crystal'?'crystal':'water lily'}" transform="translate(${x0} ${y0})">${svg}</g>`;
+  const crys='<circle r="22" fill="url(#cgx)"/><path d="M-10 10 L-5 -16 L0 10z M-2 10 L5 -22 L12 10z" fill="#c9b9e8" stroke="#fff" stroke-width="1.5"/>';
+  const lily='<ellipse rx="18" ry="7" fill="#7fbf7a" stroke="#5f9a5a"/><circle cy="-4" r="6" fill="#f9bcd3"/><circle cy="-4" r="2.5" fill="#fff3a0"/>';
+  const fm=farmerSVG(false).replace('<svg viewBox="0 0 60 70"','<svg x="-22" y="-60" width="44" height="52" viewBox="0 0 60 70"');
+  return `<div class="creek"><svg viewBox="0 0 400 240" class="pond" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="pw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fdcef"/><stop offset="1" stop-color="#5fb3d6"/></linearGradient><radialGradient id="cgx"><stop offset="0" stop-color="#e8fbff" stop-opacity=".9"/><stop offset="1" stop-color="#9fe6f6" stop-opacity="0"/></radialGradient></defs>
+   <rect width="400" height="240" fill="#b6d6a4"/><path d="M0 60 Q100 30 200 50 T400 40 V240 H0z" fill="url(#pw)"/>
+   ${[0,1,2,3,4,5].map(i=>`<path class="shim" d="M${30+i*60} ${90+(i%3)*40}h${24+(i%2)*10}" stroke="#e6f7ff" stroke-width="3" stroke-linecap="round" style="animation-delay:${i*.4}s"/>`).join('')}
+   <path d="M0 200 Q120 180 220 200 T400 196 V240 H0z" fill="#9cc98a"/><rect x="250" y="160" width="150" height="16" rx="4" fill="#a87a52"/>${[262,300,338,376].map(x=>`<rect x="${x}" y="176" width="6" height="40" fill="#8a5e3e"/>`).join('')}
+   <g transform="translate(330 160)">${fm}</g>
+   <path d="M346 110 Q260 30 ${st==='wait'||st==='bite'?'170 120':'300 150'}" stroke="#6b5048" stroke-width="2" fill="none"/>
+   ${st==='wait'||st==='bite'?`<g transform="translate(170 120)"><g class="bobber ${bob}"><circle r="8" fill="#fff"/><path d="M-8 0 a8 8 0 0 0 16 0z" fill="#e98aa4"/></g>${st==='bite'?'<circle r="16" fill="none" stroke="#fff" stroke-width="2" class="ripple"/><text y="-18" text-anchor="middle" font-size="22" font-weight="700" fill="#e06a8a">!</text>':''}</g>`:''}
+   ${spot(c.crystals,0,'crystal',40,205,crys)}${spot(c.crystals,1,'crystal',120,214,crys)}${spot(c.crystals,2,'crystal',210,206,crys)}
+   ${spot(c.lilies,0,'lily',70,110,lily)}${spot(c.lilies,1,'lily',250,90,lily)}${spot(c.lilies,2,'lily',110,165,lily)}</svg>
+   <p class="hand fishmsg" role="status">${esc(F.msg)}</p>
+   <div class="tools center"><button class="btn big" data-x="${st==='wait'||st==='bite'?'reel':'cast'}">${st==='wait'||st==='bite'?'Reel in!':'Cast line'}</button></div></div>`}
+
 function marketView(){const ent=window.SHEnt;
   return `<div class="market"><div class="banner"><h3>The Wandering Market</h3><p>Optional cosmetics that support Sprout Hollow. Everything that affects gameplay stays free, forever.</p></div><div class="grid wide">${MARKET.map(m=>`<div class="card offer ${ent&&ent.has(m.id)?'owned':''}"><span class="tag">${m.kind}</span><b>${m.name}</b><small>${m.desc}</small><button class="btn" disabled>${ent&&ent.has(m.id)?'Owned':'Coming soon · '+m.price}</button></div>`).join('')}</div><p class="note">Purchases aren't open yet. When they are, ownership will be checked by our server, never decided by the app on your device.</p></div>`}
 function sideView(tab,side){const s=S();ensureDaily();
@@ -283,9 +331,12 @@ function sideView(tab,side){const s=S();ensureDaily();
     const pantry=items.length?`<div class="panel"><h2>Pantry</h2>${items.map(([k,n])=>`<div class="row"><span>${RECIPES[k].name} × ${n}</span>${RECIPES[k].kind==='sell'?`<button class="btn small" data-x="sellitem" data-k="${k}">Sell ${RECIPES[k].sell}</button>`:`<button class="btn small" data-x="use" data-k="${k}">Use</button>`}</div>`).join('')}</div>`:'';
     return inv+craft+pantry+shop+bag}
   if(tab==='journal')return today+bag;
+  if(tab==='creek'){const bag=Object.entries(S().x.fish.bag).filter(e=>e[1]>0);const caught=Object.keys(S().x.fish.caught).length;
+    return `<div class="panel"><h2>Fish basket</h2>${bag.length?bag.map(([k,n])=>`<div class="row"><span>${FISH[k].name} × ${n}<br><small>${FISH[k].rarity}</small></span><button class="btn small" data-x="sellfish" data-k="${k}">Sell ${FISH[k].sell}</button></div>`).join(''):'<p>Nothing caught yet. Cast your line!</p>'}</div><div class="panel"><h2>Creek guide</h2><p class="note">Tap Cast, wait for the bobber to dip and the "!" to appear, then Reel in. Rare fish appear in certain seasons and weather. Tap glowing crystals and lily pads to collect them; they regrow every day.</p><p>Species found: ${caught}/${Object.keys(FISH).length}</p></div>`+bag2()}
   if(tab==='collection')return `<div class="panel"><h2>Companion care</h2><p class="note">Pet each friend once a day and feed them their favorite food for extra affection. Higher affection unlocks free cosmetic styles. Rare friends can never be bought; they are only found through adventure.</p></div>`+bag;
   if(tab==='market')return `<div class="panel"><h2>Our promise</h2><p>No pay-to-win, no energy you have to buy, no pressure timers. Cosmetics only.</p></div>`;
   return side}
+function bag2(){const mats=Object.entries(S().x.mats).filter(e=>e[1]>0);return `<div class="panel"><h2>Materials</h2>${mats.length?`<div class="mats">${mats.map(([k,n])=>`<span class="mat"><svg viewBox="0 0 60 50">${matIcon(k)}</svg>${MATS[k]} × ${n}</span>`).join('')}</div>`:'<p>Nothing gathered yet.</p>'}</div>`}
 function questlinePanel(){const s=S();return `<div class="panel journal-card"><h2>Story quests</h2>${QUESTLINES.map(q=>{const st=s.x.ql[q.id];const n=NPCS[q.npc].name;
   if(!st||!st.started)return `<div class="row"><span><b>${q.name}</b><br><small>Talk to ${n} in the Village to begin</small></span></div>`;
   if(st.done)return `<div class="row"><span><b>${q.name}</b><br><small>Complete</small></span></div>`;
@@ -293,12 +344,12 @@ function questlinePanel(){const s=S();return `<div class="panel journal-card"><h
 function after(tab){const s=S();
   const ext=$('ext');if(ext&&TABS.includes(tab)){const html=boardView(tab);if(ext._h!==html){ext.innerHTML=html;ext._h=html}}
   if(TABS.includes(tab))$('tools').innerHTML='';
+  if(tab==='woods'||tab==='creek'){const tl=$('tools');const chips=`<span class="regions"><button class="chipbtn ${tab==='woods'?'on':''}" data-x="region" data-k="woods">Whisperwood</button><button class="chipbtn ${tab==='creek'?'on':''}" data-x="region" data-k="creek">${creekOpen()?'':'Locked: '}Crystal Creek</button></span>`;if(tl&&!tl.querySelector('.regions'))tl.insertAdjacentHTML('afterbegin',chips)}
   if(tab==='woods'){const h=document.querySelector('.tile.here');if(h&&!h.querySelector('.farmer'))h.insertAdjacentHTML('beforeend',`<span class="on-tile">${farmerSVG(false)}</span>`)}
   const sc=document.querySelector('.scene');if(sc){let f=sc.querySelector('.walker');if(!f){f=document.createElement('div');f.className='walker';sc.appendChild(f)}const want=x().player.hat;if(f.dataset.h!==want){f.dataset.h=want;f.innerHTML=farmerSVG(true)}}
   seasonFX();sheets(tab);pixelWorld(tab)}
-function pixelWorld(tab){const P=window.SHPix,sc=document.querySelector('.scene');if(!P||!sc)return;P.mount(sc);
-  P.setScene({woods:'forest',farm:'farm',village:'farm',cottage:'home',collection:'glade',journal:'glade',market:'glade',quests:'forest',share:'farm'}[tab]||'farm');
-  document.body.dataset.view=tab;
+function pixelWorld(tab){const P=window.SHScenes;if(!P)return;
+  P.set({woods:'forest',quests:'forest',creek:'creek'}[tab]||'country');document.body.dataset.view=tab;
   const cr=$('critters');if(cr&&cr.dataset.pix!==Object.keys(x().comp).join()){cr.dataset.pix=Object.keys(x().comp).join();cr.innerHTML=Object.keys(x().comp).slice(0,3).map((k,i)=>`<div class="critter" id="cr${i}" style="left:${10+i*35}%;top:70%">${compSVG(k)}</div>`).join('')}}
 
 /* ---------------- Events ---------------- */
@@ -329,6 +380,11 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(!b
   else if(a==='sellitem'){if(!(s.x.items[k]>0))return;s.x.items[k]--;s.coins+=RECIPES[k].sell;SH.sfx('coin')}
   else if(a==='use'){if(!(s.x.items[k]>0))return;s.x.items[k]--;if(k==='tonic'){s.plots.forEach(p=>{if(p)p.g+=SH.CROPS[p.k].time*.5});SH.toast('Your crops sparkle and stretch!')}SH.sfx('gold')}
   else if(a==='pet'){const c=s.x.comp[k];if(!s.x.petted[k]){s.x.petted[k]=1;c.aff=Math.min(10,c.aff+1);s.x.c.pet++;bumpDaily('pet');SH.toast(COMPANIONS[k].name+' wiggles happily!')}else SH.toast(COMPANIONS[k].name+' is already content today');SH.sfx('friend');b.classList.add('boing');setTimeout(()=>b.classList.remove('boing'),500);checkAll();SH.save();return}
+  else if(a==='cast'){cast();return}
+  else if(a==='reel'){reel();return}
+  else if(a==='crystal'||a==='lily'){creekDaily();const arr=a==='crystal'?s.x.creek.crystals:s.x.creek.lilies;if(arr[+k])return;arr[+k]=1;add(s.x.mats,a,1);SH.sfx('friend');SH.toast('+1 '+MATS[a])}
+  else if(a==='sellfish'){if(!(s.x.fish.bag[k]>0))return;s.x.fish.bag[k]--;s.coins+=FISH[k].sell;SH.sfx('coin')}
+  else if(a==='region'){if(k==='creek'&&!creekOpen()){SH.toast('Explore 8 Whisperwood tiles or reach level 2 first');return}s.tab=k;SH.sfx('tap')}
   else if(a==='feed'){const c=COMPANIONS[k],o=s.x.comp[k];if(!o||s.x.fed[k])return;let crop=(s.basket[c.food]||0)>0?c.food:Object.keys(s.basket).find(q=>s.basket[q]>0);if(!crop)return SH.toast('Harvest some crops to feed your friends');s.basket[crop]--;const fav=crop===c.food;o.aff=Math.min(10,o.aff+(fav?3:1));s.x.fed[k]=1;SH.sfx(fav?'gold':'harvest');SH.toast(fav?c.name+' LOVES it!':c.name+' munches happily')}
   else if(a==='skin'){const o=s.x.comp[k],i=+b.dataset.c;if(o&&o.aff>=i*5)o.skin=i;SH.sfx('tap')}
   else if(a==='dq'){const q=s.x.dq.list[+k];if(!q||q.claimed||q.v<q.n)return;q.claimed=true;SH.toast('Reward: '+give(q.r));SH.sfx('coin')}

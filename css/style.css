@@ -217,3 +217,38 @@ img.pix{image-rendering:pixelated;width:64px;height:64px;display:block;margin:0 
 .ni-market{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%2016%2016%27%20shape-rendering%3D%27crispEdges%27%3E%3Crect%20x%3D%272%27%20y%3D%277%27%20width%3D%2712%27%20height%3D%277%27%20fill%3D%27%23FFF5E9%27/%3E%3Crect%20x%3D%271%27%20y%3D%274%27%20width%3D%2714%27%20height%3D%273%27%20fill%3D%27%23E8B6C5%27/%3E%3Crect%20x%3D%274%27%20y%3D%274%27%20width%3D%273%27%20height%3D%273%27%20fill%3D%27%23fff%27/%3E%3Crect%20x%3D%2710%27%20y%3D%274%27%20width%3D%273%27%20height%3D%273%27%20fill%3D%27%23fff%27/%3E%3Crect%20x%3D%276%27%20y%3D%2710%27%20width%3D%274%27%20height%3D%274%27%20fill%3D%27%23A8C3A0%27/%3E%3C/svg%3E")}
 @media(max-width:760px){.scene{height:clamp(120px,27dvh,260px)}body[data-view=woods] .scene{height:clamp(130px,32dvh,300px)}.ni{margin-right:3px}}
 @media(max-height:560px){.scene{display:block;height:34dvh}}
+
+/* ===== Painted storybook art (replaces pixel renderer) ===== */
+.scene{background:linear-gradient(#b8d9e8,#fdf1d6)}
+.scene>svg{position:absolute;inset:0;width:100%;height:100%}
+.ni{image-rendering:auto;border-radius:4px}
+.ffly{animation:ffly 6s ease-in-out infinite;filter:drop-shadow(0 0 4px #fff6b0)}
+@keyframes ffly{0%,100%{opacity:.1;transform:translate(0,0)}50%{opacity:1;transform:translate(10px,-14px)}}
+.flick{animation:flick 2.4s ease-in-out infinite}@keyframes flick{50%{opacity:.55}}
+.scene .sway{animation:lsway 3.2s ease-in-out infinite;transform-box:view-box}@keyframes lsway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.fall{animation:fall2 .9s linear infinite}@keyframes fall2{0%{transform:translateY(-12px);opacity:.3}50%{opacity:1}100%{transform:translateY(12px);opacity:.3}}
+.shim{animation:shim 3s ease-in-out infinite}@keyframes shim{50%{opacity:.2;transform:translateX(8px)}}
+svg.cre{width:64px;height:64px;display:block;margin:0 auto;overflow:visible}
+.critter svg.cre{width:100%;height:auto}.pal svg.cre{width:64px;height:64px}.card.creature svg.cre{width:80px;height:80px}
+.tut-art svg.cre{width:110px;height:110px}
+.cre .bob{animation:cbob 2.6s ease-in-out infinite;transform-origin:50% 90%;transform-box:fill-box}@keyframes cbob{50%{transform:translateY(-3px) scaleY(1.03)}}
+.creek{display:flex;flex-direction:column;height:100%;gap:6px}
+.creek .pond{width:100%;flex:1;min-height:0;border-radius:16px;border:2px solid var(--line)}
+.fishmsg{text-align:center;margin:0}
+.bobber.float{animation:bf 1.6s ease-in-out infinite}@keyframes bf{50%{transform:translateY(3px)}}
+.bobber.bite{animation:bb .25s ease-in-out infinite}@keyframes bb{50%{transform:translateY(7px)}}
+.ripple{animation:rip 1s ease-out infinite;transform-box:fill-box;transform-origin:center}@keyframes rip{from{transform:scale(.6);opacity:1}to{transform:scale(1.6);opacity:0}}
+.pick{cursor:pointer}.pick:hover{filter:brightness(1.15)}
+.fishpic svg{width:160px;height:100px}
+.lockmsg{text-align:center;padding:30px 10px}
+.regions{display:flex;gap:6px;width:100%;justify-content:center;flex-wrap:wrap}
+body[data-view=creek] .scene{height:clamp(150px,30dvh,360px)}
+@media(prefers-reduced-motion:reduce){.ffly,.flick,.scene .sway,.fall,.shim,.bobber,.ripple,.cre .bob{animation:none}}
+body[data-view=woods] .board{width:min(100cqw,calc(100cqh - 104px))}
+body[data-view=creek] .board.extb{height:calc(100cqh - 56px);padding:8px}
+body[data-view=woods] .tools,body[data-view=creek] .tools{row-gap:4px;margin-top:6px}
+.regions .chipbtn{min-height:32px}
+@media(max-width:760px){body[data-view=woods] .board{width:min(100cqw,calc(100cqh - 92px))}body[data-view=woods] .tools .btn,body[data-view=woods] .tools .pill{min-height:32px;font-size:13px}}
+.creek .pond{flex:1 1 0;height:0;min-height:120px}.board.extb:has(.creek){overflow:hidden}
+@media(max-width:760px){.creek .pond{min-height:60px}.creek{gap:3px}.creek .tools{margin-top:2px}.creek .btn.big{min-height:36px}.fishmsg{font-size:15px}}
+@media(max-width:760px){body[data-view=creek] .scene{height:clamp(80px,16dvh,200px)}body[data-view=creek] .main{grid-template-rows:minmax(0,1.6fr) minmax(0,1fr)}}
