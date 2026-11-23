@@ -141,7 +141,7 @@ function render(){
   if(S.tab==='share'){
     side=`<div class="panel"><h2>Scan to play</h2><p>Point any phone camera here. It opens the game, then use "Add to Home Screen" (iPhone) or "Install app" (Android, Windows, Mac).</p><div id="qr"></div><label for="url">Game link</label><input id="url" value="${APP_URL}"><div class="tools"><button class="btn" data-a="copy">Copy link</button><button class="btn" data-a="regen">Update QR</button></div><p class="note">Free forever. No ads, no sign-up. Saves on each device.</p></div>`;
   }
-  if(X()){try{side=X().side(S.tab,side)}catch(e){console.error(e)}}$('side').innerHTML=side;if(X()){try{X().after(S.tab)}catch(e){console.error(e)}}
+  if(X()){try{side=X().side(S.tab,side)}catch(e){console.error(e)}}{const sd=$('side');if(sd._h!==side){const op=sd.querySelector(':scope>.panel:not([hidden])');const keep=op?op.scrollTop:0;sd.innerHTML=side;sd._h=side;sd._keep=keep}}if(X()){try{X().after(S.tab)}catch(e){console.error(e)}}
   if(S.tab==='share')drawQR($('url').value);
 }
 function drawQR(u){const el=$('qr');if(!el)return;el.innerHTML='';try{new QRCode(el,{text:u,width:220,height:220,colorDark:'#3b2a1e',colorLight:'#ffffff'})}catch(e){el.textContent='QR library could not load. Link: '+u}}

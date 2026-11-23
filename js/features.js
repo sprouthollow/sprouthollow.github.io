@@ -363,7 +363,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-x]');if(!b
  try{
   if(a==='pausebtn'){setPause(!PAUSED);return}
   if(a==='resume'){setPause(false);return}
-  if(a==='sheet'){SHEET[S().tab]=+k;SH.sfx('tap');sheets(S().tab);return}
+  if(a==='sheet'){SHEET[S().tab]=+k;SH.sfx('tap');sheets(S().tab);const v=document.querySelector('#side>.panel:not([hidden])');if(v)v.scrollTop=0;return}
   if(a==='tut-next'){s.x.tut++;SH.close();SH.save();setTimeout(tutorial,120);return}
   if(a==='tut-skip'){s.x.tut=TUT.length;SH.close();tutorial();return}
   if(a==='tut-replay'){s.x.tut=0;SH.save();tutorial();return}
@@ -415,6 +415,7 @@ function sheets(tab){const side=$('side');if(!side)return;side.querySelectorAll(
   side.classList.add('sheeted');const names=ps.map(p=>{const h=p.querySelector('h2');return h?h.textContent:'More'});
   let i=SHEET[tab]||0;if(i>=ps.length)i=0;
   ps.forEach((p,j)=>p.hidden=j!==i);
+  if(side._keep){const vis=ps[i];if(vis)vis.scrollTop=side._keep;side._keep=0}
   const bar=document.createElement('div');bar.className='sheetbar';bar.setAttribute('role','tablist');
   bar.innerHTML=names.map((n,j)=>`<button class="chipbtn ${j===i?'on':''}" role="tab" aria-selected="${j===i}" data-x="sheet" data-k="${j}">${esc(n)}</button>`).join('');
   side.prepend(bar)}

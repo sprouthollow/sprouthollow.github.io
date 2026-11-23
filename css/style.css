@@ -304,3 +304,5 @@ body.stage .main{grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr)}
  body.stage .board.extb{width:calc(100cqw - 12px);height:calc(100cqh - 12px)}
  body.stage[data-view=creek] .board.extb{height:calc(100cqh - 54px)}
 }
+#side>.panel{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+@media(max-width:760px){#side .seeds{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}#side .seed{padding:4px 8px;min-height:44px}#side .seed span{font-size:14px}#side .seed small{font-size:12px}}
