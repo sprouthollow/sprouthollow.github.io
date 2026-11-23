@@ -421,7 +421,9 @@ function sheets(tab){const side=$('side');if(!side)return;side.querySelectorAll(
 
 /* ---------------- Init ---------------- */
 function init(){SH=window.SH;
-  const st=document.querySelector('.stats');if(st&&!$('pbtn'))st.insertAdjacentHTML('beforeend','<button class="btn hb" id="pbtn" data-x="pausebtn" aria-pressed="false">Pause</button>');try{migrate();ensureDaily();seasonCheck();backup(false);SH.save()}catch(e){console.error('features init',e)}
+  const st=document.querySelector('.stats');if(st&&!$('pbtn'))st.insertAdjacentHTML('beforeend','<button class="btn hb" id="pbtn" data-x="pausebtn" aria-pressed="false">Pause</button>');
+  const scn=document.querySelector('.scene'),sec=document.querySelector('.main>section');if(scn&&sec&&scn.parentElement!==sec){sec.prepend(scn);document.body.classList.add('stage')}
+  const hd=document.querySelector('header');if(hd&&!hd.querySelector('.hctl')){const c=document.createElement('div');c.className='hctl';['mbtn','sbtn','pbtn'].forEach(id=>{const b=$(id);if(b)c.appendChild(b)});hd.appendChild(c)}try{migrate();ensureDaily();seasonCheck();backup(false);SH.save()}catch(e){console.error('features init',e)}
   setTimeout(()=>{try{x().tut<TUT.length?tutorial():dailyCheck()}catch(e){console.error(e)}},600);
   if(window.SHEnt)window.SHEnt.refresh().catch(()=>{})}
 window.SHX={paused:()=>PAUSED,tabs:TABS,init,side:sideView,after,emit,explore,mapGen,growMul};

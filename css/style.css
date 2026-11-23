@@ -252,3 +252,55 @@ body[data-view=woods] .tools,body[data-view=creek] .tools{row-gap:4px;margin-top
 .creek .pond{flex:1 1 0;height:0;min-height:120px}.board.extb:has(.creek){overflow:hidden}
 @media(max-width:760px){.creek .pond{min-height:60px}.creek{gap:3px}.creek .tools{margin-top:2px}.creek .btn.big{min-height:36px}.fishmsg{font-size:15px}}
 @media(max-width:760px){body[data-view=creek] .scene{height:clamp(80px,16dvh,200px)}body[data-view=creek] .main{grid-template-rows:minmax(0,1.6fr) minmax(0,1fr)}}
+
+/* ===== Real-size layout: the game board is the hero on every device ===== */
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+header h1{flex:1 1 auto}
+.hctl{display:flex;gap:6px;flex:none}
+header .stats{flex:1 1 100%;order:3;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+header .stats::-webkit-scrollbar{display:none}
+header .stats>*{flex:none}
+@media(min-width:761px){header .stats{flex:0 1 auto;order:0}header{flex-wrap:nowrap}}
+@media(max-width:760px){
+ .wrap{gap:6px}
+ header h1{font-size:22px}
+ .hctl .btn.hb{min-height:34px;font-size:13px;padding:0 10px}
+ header .stats .pill{font-size:13px;padding:2px 9px}
+ .scene,body[data-view=woods] .scene{height:clamp(96px,19dvh,200px)}
+ body[data-view=creek] .scene{height:clamp(80px,14dvh,160px)}
+ .main,body[data-view=creek] .main{grid-template-rows:minmax(0,1.9fr) minmax(0,1fr);gap:6px}
+ .board{width:min(100cqw,calc(100cqh - 50px));padding:6px;border-width:3px}
+ body[data-view=woods] .board{width:min(100cqw,calc(100cqh - 84px))}
+ body[data-view=creek] .board.extb{height:calc(100cqh - 46px)}
+ .field{gap:6px}.map{gap:5px}
+ .tools{margin-top:5px;gap:5px}
+ .tools .btn,body[data-view=woods] .tools .btn,body[data-view=woods] .tools .pill{min-height:38px;font-size:15px;padding:2px 12px}
+ .regions .chipbtn{min-height:34px;font-size:14px}
+ .tabs .btn{min-height:42px;font-size:15px}
+ .sheetbar .chipbtn{min-height:36px;font-size:14px}
+ #side .panel{padding:10px 12px}
+}
+@media(max-width:760px) and (max-height:700px){
+ .scene,body[data-view=woods] .scene{height:clamp(70px,14dvh,120px)}
+ header h1{font-size:19px}
+}
+
+/* ===== Stage layout: painted world is the backdrop, the board sits on it at full size ===== */
+body.stage .main>section{position:relative;border-radius:22px;overflow:hidden;justify-content:center;padding:10px;border:3px solid var(--line);box-shadow:0 4px 0 var(--line),0 10px 24px #0002}
+body.stage .main>section>.scene{position:absolute;inset:0;height:auto!important;margin:0;border:0;border-radius:0;box-shadow:none;z-index:0}
+body.stage .main>section>.board,body.stage .main>section>.tools{position:relative;z-index:1}
+body.stage .board{width:min(calc(100cqw - 20px),calc(100cqh - 76px));box-shadow:0 6px 0 var(--woodD),0 16px 30px #0004}
+body.stage[data-view=woods] .board{width:min(calc(100cqw - 20px),calc(100cqh - 116px))}
+body.stage .board.extb{width:calc(100cqw - 20px);height:calc(100cqh - 20px);background:color-mix(in srgb,var(--paper) 94%,transparent)}
+body.stage[data-view=creek] .board.extb{height:calc(100cqh - 64px)}
+body.stage .main>section>.tools{background:color-mix(in srgb,var(--paper) 80%,transparent);border-radius:16px;padding:4px 6px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+body.stage .main>section>.tools:empty{display:none}
+body.stage .main{grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr)}
+@media(max-width:760px){
+ body.stage .main,body.stage[data-view=creek] .main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,2.3fr) minmax(0,1fr)}
+ body.stage .main>section{padding:6px;border-radius:18px}
+ body.stage .board{width:min(calc(100cqw - 12px),calc(100cqh - 60px))}
+ body.stage[data-view=woods] .board{width:min(calc(100cqw - 12px),calc(100cqh - 98px))}
+ body.stage .board.extb{width:calc(100cqw - 12px);height:calc(100cqh - 12px)}
+ body.stage[data-view=creek] .board.extb{height:calc(100cqh - 54px)}
+}
