@@ -380,3 +380,8 @@ body.stage .main>section>.tools{max-width:100%;min-width:0}
 .rays{animation:rays 7s ease-in-out infinite}@keyframes rays{50%{opacity:.4}}
 @media(prefers-reduced-motion:reduce){.spin,.smoke circle,.rays{animation:none}}
 .hot .ring{animation:ring 1.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}@keyframes ring{50%{transform:scale(1.25);opacity:.55}}@media(prefers-reduced-motion:reduce){.hot .ring{animation:none}}
+.scene image.art{transition:filter 1s}
+[data-season=winter] .scene image.art{filter:saturate(.55) brightness(1.08) hue-rotate(-8deg)}
+[data-season=autumn] .scene image.art{filter:sepia(.25) saturate(1.15) hue-rotate(-12deg)}
+[data-season=summer] .scene image.art{filter:saturate(1.1) brightness(1.03)}
+.cottage .room image{pointer-events:none}

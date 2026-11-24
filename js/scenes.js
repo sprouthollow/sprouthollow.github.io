@@ -118,14 +118,19 @@ ${Array.from({length:14},(_,i)=>`<rect x="${312+i*18}" y="216" width="4" height=
 ${Array.from({length:120},()=>{const x=ri(0,800)|0,y=ri(236,298)|0;return `<path d="M${x} ${y} q1 -6 3 -9" stroke="${['#5f8f4f','#7fae5e'][Math.floor(r()*2)]}" stroke-width="1.5" fill="none"/>`}).join('')}
 ${Array.from({length:4},(_,i)=>`<g class="bfly" style="animation-delay:${i*1.7}s;--bx:${(i%2?-50:50)}px;--by:-20px"><g transform="translate(${360+i*90} ${200+(i%2)*20})"><ellipse cx="-3" cy="0" rx="4" ry="5" fill="${['#f6a6c4','#fff3a0','#b8d9e8','#c9b9e8'][i]}" class="wing"/><ellipse cx="3" cy="0" rx="4" ry="5" fill="${['#f6a6c4','#fff3a0','#b8d9e8','#c9b9e8'][i]}" class="wing"/></g></g>`).join('')}
 <g class="ffwrap">${flies(6)}</g></svg>`}
-const SC={forest,creek,meadow,village};const cache={};
+const SC={forest,creek,meadow,village};
+/* Hand-painted backgrounds (generated in Figma, stored in /art). The SVG scenes above stay as an offline fallback. */
+const ART={village:'art/village.webp',forest:'art/forest.webp',creek:'art/creek.webp',meadow:'art/meadow.webp',home:'art/home.webp'};
+const GLOW={forest:[[214,214],[240,180],[300,150],[422,120],[445,150],[548,124],[612,222],[725,184],[620,96],[160,128]],village:[[175,170],[268,175],[220,108]],creek:[[60,220],[285,140],[780,210],[560,160]],meadow:[[185,150]],home:[[685,280]]};
+function painted(name){seed=7;const g=(GLOW[name]||[]).map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${name==='forest'?22:30}" fill="url(#lg)" class="flick" style="animation-delay:${(i*.37).toFixed(2)}s"/>`).join('');
+  return `<svg viewBox="0 0 800 343" preserveAspectRatio="xMidYMid slice">${DEFS}<image href="${ART[name]}" width="800" height="343" preserveAspectRatio="xMidYMid slice" class="art"/>${g}<g class="ffwrap">${flies(name==='forest'?22:name==='home'?0:10)}</g></svg>`}const cache={};
 let GRAIN='';function grain(){if(GRAIN)return GRAIN;try{const c=document.createElement('canvas');c.width=c.height=96;const x=c.getContext('2d'),d=x.createImageData(96,96);for(let i=0;i<d.data.length;i+=4){const v=120+Math.random()*100;d.data[i]=v;d.data[i+1]=v*.92;d.data[i+2]=v*.8;d.data[i+3]=Math.random()*26}x.putImageData(d,0,0);GRAIN=c.toDataURL()}catch(e){}return GRAIN}
-function finish(svg){const vb=(svg.match(/viewBox="0 0 (\d+) (\d+)"/)||[0,800,300]);const W=vb[1],H=vb[2];const g=grain();
+function finish(svg,isArt){const vb=(svg.match(/viewBox="0 0 (\d+) (\d+)"/)||[0,800,300]);const W=vb[1],H=vb[2];const g=grain();
   const layer=`<defs><radialGradient id="vig" cx=".5" cy=".45" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#3a2a40" stop-opacity=".28"/></radialGradient><linearGradient id="ray" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff8de" stop-opacity=".35"/><stop offset="1" stop-color="#fff8de" stop-opacity="0"/></linearGradient>${g?`<pattern id="grn" width="96" height="96" patternUnits="userSpaceOnUse"><image href="${g}" width="96" height="96"/></pattern>`:''}</defs>
-  <g pointer-events="none" class="paint"><path d="M${W*.8} 0 L${W*.98} 0 L${W*.55} ${H} L${W*.38} ${H}z" fill="url(#ray)" class="rays"/><path d="M${W*.66} 0 L${W*.72} 0 L${W*.3} ${H} L${W*.24} ${H}z" fill="url(#ray)" class="rays" style="animation-delay:2s"/>${g?`<rect width="${W}" height="${H}" fill="url(#grn)" style="mix-blend-mode:multiply"/>`:''}<rect width="${W}" height="${H}" fill="url(#vig)"/></g>`;
+  <g pointer-events="none" class="paint"><path d="M${W*.8} 0 L${W*.98} 0 L${W*.55} ${H} L${W*.38} ${H}z" fill="url(#ray)" class="rays"/><path d="M${W*.66} 0 L${W*.72} 0 L${W*.3} ${H} L${W*.24} ${H}z" fill="url(#ray)" class="rays" style="animation-delay:2s"/>${g&&!isArt?`<rect width="${W}" height="${H}" fill="url(#grn)" style="mix-blend-mode:multiply"/>`:''}<rect width="${W}" height="${H}" fill="url(#vig)"/></g>`;
   return svg.replace(/<\/svg>$/,layer+'</svg>')}
 function set(name){const sc=document.querySelector('.scene');if(!sc)return;if(!sc._orig){const sv=sc.querySelector('svg');sc._orig=sv?sv.outerHTML:''}
-  if(sc.dataset.paint===name)return;sc.dataset.paint=name;const key=name==='country'?'village':name;const html=cache[key]||(cache[key]=finish(SC[key]()));
+  if(sc.dataset.paint===name)return;sc.dataset.paint=name;const key=name==='country'?'village':name;const html=cache[key]||(cache[key]=finish(ART[key]?painted(key):SC[key](),!!ART[key]));
   const old=sc.querySelector('svg');if(old)old.remove();sc.insertAdjacentHTML('afterbegin',html)}
 
 /* ---------- companions: round, blushing, storybook style ---------- */
@@ -141,5 +146,5 @@ const CR={
  emberkin:()=>`<path d="M74 70 q18 2 16 -14 q-6 6 -14 4" fill="#f6b89a" ${OL}/><path d="M88 56 l5 -6 l1 8z" fill="#ffcf6a"/><path d="M22 46 q-14 -14 -4 -26 q8 12 16 14z M78 46 q14 -14 4 -26 q-8 12 -16 14z" fill="#d8cdf2" ${OL}/><path d="M40 26 l-3 -10 l8 6z M60 26 l3 -10 l-8 6z" fill="#fff4e4" ${OL}/><ellipse cx="50" cy="58" rx="27" ry="25" fill="#f6b89a" ${OL}/><ellipse cx="50" cy="68" rx="16" ry="12" fill="#ffe6d8"/>${face(50,56,.95)}`};
 const SKIN=[()=>'',()=>`<path d="M44 20 q-10 -8 -12 2 q4 6 12 -2z M56 20 q10 -8 12 2 q-4 6 -12 -2z" fill="#f48fb8" ${OL}/><circle cx="50" cy="20" r="4" fill="#f48fb8" ${OL}/>`,()=>`<g fill="#fff3a0">${[[20,20],[82,26],[16,74],[86,80]].map(([x,y])=>`<path d="M${x} ${y-6}l1.8 4.2 4.2 1.8 -4.2 1.8 -1.8 4.2 -1.8 -4.2 -4.2 -1.8 4.2 -1.8z"/>`).join('')}</g>`];
 function creature(k,skin){const f=CR[k];if(!f)return'';return `<svg viewBox="0 0 100 100" class="cre"><defs><radialGradient id="lumig"><stop offset="0" stop-color="#fff6b0" stop-opacity=".9"/><stop offset="1" stop-color="#fff6b0" stop-opacity="0"/></radialGradient></defs><ellipse cx="50" cy="92" rx="24" ry="5" fill="#0002"/><g class="bob">${f()}<ellipse cx="40" cy="46" rx="11" ry="6" fill="#fff" opacity=".45" transform="rotate(-20 40 46)"/><ellipse cx="36" cy="43" rx="3.5" ry="2" fill="#fff" opacity=".8"/><path d="M28 74 q22 12 44 0" stroke="#6b4440" stroke-width="5" fill="none" opacity=".1" stroke-linecap="round"/>${(SKIN[skin||0]||SKIN[0])()}</g></svg>`}
-window.SHScenes={set,creature,list:Object.keys(CR)};
+window.SHScenes={art:ART,set,creature,list:Object.keys(CR)};
 })();
