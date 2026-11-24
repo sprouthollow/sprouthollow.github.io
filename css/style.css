@@ -375,3 +375,8 @@ body.walkmode .main>section>.scene{background:none}
 }
 @media(max-width:760px){body[data-view=farm] .tools{flex-wrap:nowrap;gap:4px}body[data-view=farm] .tools .btn{padding:2px 9px;font-size:14px}}
 body.stage .main>section>.tools{max-width:100%;min-width:0}
+.spin{animation:spin 9s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.smoke circle{animation:smoke 4s ease-out infinite}@keyframes smoke{0%{transform:translate(0,6px);opacity:0}30%{opacity:.6}100%{transform:translate(14px,-22px);opacity:0}}
+.rays{animation:rays 7s ease-in-out infinite}@keyframes rays{50%{opacity:.4}}
+@media(prefers-reduced-motion:reduce){.spin,.smoke circle,.rays{animation:none}}
+.hot .ring{animation:ring 1.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}@keyframes ring{50%{transform:scale(1.25);opacity:.55}}@media(prefers-reduced-motion:reduce){.hot .ring{animation:none}}
